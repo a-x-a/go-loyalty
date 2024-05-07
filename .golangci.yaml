@@ -249,7 +249,7 @@ linters:
 linters-settings:
   # gci:
   #   # DEPRECATED: use `sections` and `prefix(github.com/org/project)` instead.
-  #   local-prefixes: github.com/a-x-a/go-metric
+  #   local-prefixes: github.com/a-x-a/go-loyalty
   #   # Section configuration to compare against.
   #   # Section names are case-insensitive and may contain parameters in ().
   #   # The default order of sections is `standard > default > custom > blank > dot > alias`,
@@ -258,7 +258,7 @@ linters-settings:
   #   sections:
   #     - standard # Standard section: captures all standard packages.
   #     - default # Default section: contains all imports that could not be matched to another section type.
-  #     - prefix(github.com/a-x-a/go-metric) # Custom section: groups all imports with the specified Prefix.
+  #     - prefix(github.com/a-x-a/go-loyalty) # Custom section: groups all imports with the specified Prefix.
   #     - blank # Blank section: contains all blank imports. This section is not present unless explicitly enabled.
   #     - dot # Dot section: contains all dot imports. This section is not present unless explicitly enabled.
   #     - alias # Alias section: contains all alias imports. This section is not present unless explicitly enabled.
@@ -271,7 +271,7 @@ linters-settings:
   #   custom-order: true
 
   goimports:
-    local-prefixes: github.com/a-x-a/go-metric
+    local-prefixes: github.com/a-x-a/go-loyalty
 
   gomnd:
     # don't include the "operation" and "assign"
