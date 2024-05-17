@@ -1,6 +1,6 @@
 package model
 
 type Balance struct {
-	Current   float64
-	Withdrawn float64
+	Current   float64 `json:"current"`
+	Withdrawn float64 `json:"withdrawn,omitempty"`
 }
