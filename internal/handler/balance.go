@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -14,9 +15,13 @@ func (h *Handler) GetBalance() echo.HandlerFunc {
 			return err
 		}
 
-		balance := userID
-		// TODO balanceservice.GetBalance(ctx context.Context, userID int64) (*Ballance, error)
-		// balance, err := h.Service.BalanceService.GetBalance(ctx, userID) (*Ballance, error)
+		ctx, cancel := context.WithCancel(c.Request().Context())
+		defer cancel()
+
+		balance, err := h.Service.GetBalance(ctx, userID)
+		if err != nil {
+			return responseWithError(c, http.StatusBadRequest, err)
+		}
 
 		return c.JSON(http.StatusOK, balance)
 	}
@@ -42,11 +47,15 @@ func (h *Handler) WithdrawBalance() echo.HandlerFunc {
 			return responseWithError(c, http.StatusBadRequest, err)
 		}
 
-		// TODO balanceservice.Withdraw(ctx context.Context, userID int64, wdr WithdrawRequest) error
-		// err := h.Service.BalanceService.Withdraw(ctx, userID, wdr) error
+		ctx, cancel := context.WithCancel(c.Request().Context())
+		defer cancel()
 
-		return c.JSON(http.StatusOK, echo.Map{"data": data, "user_id": userID})
-		// return responseWithCode(c, http.StatusOK)
+		err = h.Service.WithdrawBalance(ctx, userID, data.Order, data.Sum)
+		if err != nil {
+			return responseWithError(c, http.StatusBadRequest, err)
+		}
+
+		return responseWithCode(c, http.StatusOK)
 	}
 
 	return fn
@@ -65,12 +74,15 @@ func (h *Handler) WithdrawalsBalance() echo.HandlerFunc {
 			return responseWithError(c, http.StatusBadRequest, err)
 		}
 
-		withdrawals := data
-		// TODO balanceservice.GetWithdrawals(ctx context.Context, userID int64) (*WithdrawalsResponse, error)
-		//withdrawals, err := h.Service.BalanceService.GetWithdrawals(ctx, userID, wdr) (*WithdrawalsResponse, error)
+		ctx, cancel := context.WithCancel(c.Request().Context())
+		defer cancel()
 
-		return c.JSON(http.StatusOK, echo.Map{"withdrawals": withdrawals, "user_id": userID})
-		// return c.JSON(http.StatusOK, withdrawals)
+		withdrawals, err := h.Service.GetWithdrawalsBalance(ctx, userID)
+		if err != nil {
+			return responseWithError(c, http.StatusBadRequest, err)
+		}
+
+		return c.JSON(http.StatusOK, withdrawals)
 	}
 
 	return fn

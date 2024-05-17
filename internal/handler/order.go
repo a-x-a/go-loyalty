@@ -1,7 +1,8 @@
 package handler
 
 import (
-	"io/ioutil"
+	"context"
+	"io"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -15,18 +16,22 @@ func (h *Handler) UploadOrder() echo.HandlerFunc {
 			return err
 		}
 
-		body, err := ioutil.ReadAll(c.Request().Body)
+		body, err := io.ReadAll(c.Request().Body)
 		if err != nil {
 			return responseWithError(c, http.StatusBadRequest, err)
 		}
 
 		orderNumber := string(body)
 
-		// TODO orderservice.Upload(ctx context.Context, userID int64, number string) error
-		// err := h.Service.OrderService.Upload(ctx, userID, orderNumber) error
+		ctx, cancel := context.WithCancel(c.Request().Context())
+		defer cancel()
 
-		return c.JSON(http.StatusOK, echo.Map{"order": orderNumber, "user_id": userID})
-		// return responseWithCode(c, http.StatusOK)
+		err = h.Service.UploadOrder(ctx, userID, orderNumber)
+		if err != nil {
+			return responseWithError(c, http.StatusBadRequest, err)
+		}
+
+		return responseWithCode(c, http.StatusOK)
 	}
 
 	return fn
@@ -40,9 +45,13 @@ func (h *Handler) GetAllOrders() echo.HandlerFunc {
 			return err
 		}
 
-		orders := userID
-		// TODO orderservice.GetAll(ctx context.Context, userID int64) (*Orders, error)
-		// orders, err := h.Service.OrderService.GetBalance(ctx, userID) (*Orders, error)
+		ctx, cancel := context.WithCancel(c.Request().Context())
+		defer cancel()
+
+		orders, err := h.Service.GetAllOrders(ctx, userID)
+		if err != nil {
+			return responseWithError(c, http.StatusBadRequest, err)
+		}
 
 		return c.JSON(http.StatusOK, orders)
 	}

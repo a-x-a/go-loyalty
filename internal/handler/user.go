@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -20,10 +21,13 @@ func (h *Handler) RegisterUser() echo.HandlerFunc {
 			return responseWithError(c, http.StatusBadRequest, err)
 		}
 
-		token := data
-		// TODO userservice.RegisterUser(ctx context.Context, login, password string) (error)
-		// err := h.Service.UserService.RegisterUser(ctx, data.Login, data.Password)
-		// token, err := h.Service.UserService.Login(cts, data.Login, data.Password)
+		ctx, cancel := context.WithCancel(c.Request().Context())
+		defer cancel()
+
+		token, err := h.Service.RegisterUser(ctx, data.Login, data.Password)
+		if err != nil {
+			return responseWithError(c, http.StatusBadRequest, err)
+		}
 
 		c.Response().Header().Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %s", token))
 
@@ -46,9 +50,13 @@ func (h *Handler) Login() echo.HandlerFunc {
 			return responseWithError(c, http.StatusBadRequest, err)
 		}
 
-		token := data
-		// TODO userservice.Login(ctx context.Context, login, password string) (string, error)
-		// token, err := h.Service.UserService.Login(ctx, data.Login, data.Password)
+		ctx, cancel := context.WithCancel(c.Request().Context())
+		defer cancel()
+
+		token, err := h.Service.Login(ctx, data.Login, data.Password)
+		if err != nil {
+			return responseWithError(c, http.StatusBadRequest, err)
+		}
 
 		c.Response().Header().Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %s", token))
 

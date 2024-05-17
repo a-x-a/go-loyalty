@@ -1,21 +1,37 @@
 package handler
 
 import (
+	"context"
 	"errors"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 
-	"github.com/a-x-a/go-loyalty/internal/service"
+	"github.com/a-x-a/go-loyalty/internal/model"
 )
 
-type Handler struct {
-	Service *service.Service
-}
+type (
+	APIService interface {
+		// UserService
+		RegisterUser(ctx context.Context, login, password string) (string, error)
+		Login(ctx context.Context, login, password string) (string, error)
+		// OrderService
+		UploadOrder(ctx context.Context, userID int64, number string) error
+		GetAllOrders(ctx context.Context, userID int64) (*model.Orders, error)
+		// BallanceService
+		GetBalance(ctx context.Context, userID int64) (*model.Balance, error)
+		WithdrawBalance(ctx context.Context, userID int64, number string, sum float64) error
+		GetWithdrawalsBalance(ctx context.Context, userID int64) (*model.Withdrawals, error)
+	}
 
-func New(service *service.Service) *Handler {
+	Handler struct {
+		Service APIService
+	}
+)
+
+func New(s APIService) *Handler {
 	return &Handler{
-		Service: service,
+		Service: s,
 	}
 }
 
