@@ -14,7 +14,7 @@ type (
 	}
 
 	UserService interface {
-		RegisterUser(ctx context.Context, login, password string) (string, error)
+		Register(ctx context.Context, login, password string) error
 		Login(ctx context.Context, login, password string) (string, error)
 	}
 
@@ -30,6 +30,21 @@ type (
 	}
 )
 
-func New() *Service {
-	return &Service{}
+func New(userService UserService) *Service {
+	return &Service{
+		UserService: userService,
+	}
+}
+
+func (s *Service) RegisterUser(ctx context.Context, login, password string) (string, error) {
+	err := s.UserService.Register(ctx, login, password)
+	if err != nil {
+		return "", err
+	}
+
+	return s.UserService.Login(ctx, login, password)
+}
+
+func (s *Service) Login(ctx context.Context, login, password string) (string, error) {
+	return s.UserService.Login(ctx, login, password)
 }

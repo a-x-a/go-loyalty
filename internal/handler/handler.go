@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 
 	"github.com/a-x-a/go-loyalty/internal/model"
@@ -33,26 +32,6 @@ func New(s APIService) *Handler {
 	return &Handler{
 		Service: s,
 	}
-}
-
-func SuccessHandler(c echo.Context) {
-	// TODO move to model or pkg.JWT
-	type JWTCustomClaims struct {
-		UserID int64 `json:"user_id"`
-		jwt.RegisteredClaims
-	}
-
-	token, ok := c.Get("user").(*jwt.Token)
-	if !ok {
-		return
-	}
-
-	claims := token.Claims.(*JWTCustomClaims)
-	if !ok {
-		return
-	}
-
-	c.Set("userID", claims.UserID)
 }
 
 func responseWithError(c echo.Context, code int, err error) error {

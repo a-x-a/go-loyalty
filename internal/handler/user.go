@@ -13,7 +13,7 @@ type registerUser struct {
 	Password string `json:"password" validate:"required"`
 }
 
-// Регистрация пользователя
+// Регистрация пользователя.
 func (h *Handler) RegisterUser() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
 		data := &registerUser{}
@@ -42,7 +42,7 @@ type loginUser struct {
 	Password string `json:"password" validate:"required"`
 }
 
-// Аутентификация пользователя
+// Аутентификация пользователя.
 func (h *Handler) Login() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
 		data := &loginUser{}
