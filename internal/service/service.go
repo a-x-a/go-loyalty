@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 
+	"go.uber.org/zap"
+
 	"github.com/a-x-a/go-loyalty/internal/model"
 )
 
@@ -11,6 +13,7 @@ type (
 		UserService
 		OrderService
 		BallanceService
+		l *zap.Logger
 	}
 
 	UserService interface {
@@ -30,9 +33,10 @@ type (
 	}
 )
 
-func New(userService UserService) *Service {
+func New(userService UserService, log *zap.Logger) *Service {
 	return &Service{
 		UserService: userService,
+		l:           log,
 	}
 }
 
@@ -47,4 +51,13 @@ func (s *Service) RegisterUser(ctx context.Context, login, password string) (str
 
 func (s *Service) Login(ctx context.Context, login, password string) (string, error) {
 	return s.UserService.Login(ctx, login, password)
+}
+
+func (s *Service) GetBalance(ctx context.Context, userID int64) (*model.Balance, error) {
+	b := model.Balance{
+		Current: 15.0,
+		// Withdrawn: 12.5,
+	}
+	s.l.Debug("getbalance", zap.Any("balance", b))
+	return &b, nil
 }

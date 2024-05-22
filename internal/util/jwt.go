@@ -9,7 +9,7 @@ import (
 )
 
 type JWTCustomClaims struct {
-	UserID int64 `json:"user_id"`
+	UID int64 `json:"uid"`
 	jwt.RegisteredClaims
 }
 
@@ -52,5 +52,5 @@ func successHandler(c echo.Context) {
 		return
 	}
 
-	c.Set("userID", claims.UserID)
+	c.Set("uid", claims.UID)
 }

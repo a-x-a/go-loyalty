@@ -6,6 +6,9 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/pkg/errors"
+
+	"github.com/a-x-a/go-loyalty/internal/model"
 )
 
 type registerUser struct {
@@ -26,7 +29,16 @@ func (h *Handler) RegisterUser() echo.HandlerFunc {
 
 		token, err := h.Service.RegisterUser(ctx, data.Login, data.Password)
 		if err != nil {
-			return responseWithError(c, http.StatusBadRequest, err)
+			switch {
+			case errors.Is(err, model.ErrInvalidRequestFormat):
+				return responseWithError(c, http.StatusBadRequest, err)
+			case errors.Is(err, model.ErrInvalidUsernameOrPassword):
+				return responseWithError(c, http.StatusBadRequest, err)
+			case errors.Is(err, model.ErrUsernameAlreadyTaken):
+				return responseWithError(c, http.StatusConflict, err)
+			}
+
+			return responseWithError(c, http.StatusInternalServerError, err)
 		}
 
 		c.Response().Header().Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %s", token))
@@ -55,7 +67,14 @@ func (h *Handler) Login() echo.HandlerFunc {
 
 		token, err := h.Service.Login(ctx, data.Login, data.Password)
 		if err != nil {
-			return responseWithError(c, http.StatusBadRequest, err)
+			switch {
+			case errors.Is(err, model.ErrInvalidRequestFormat):
+				return responseWithError(c, http.StatusBadRequest, err)
+			case errors.Is(err, model.ErrInvalidUsernameOrPassword):
+				return responseWithError(c, http.StatusUnauthorized, err)
+			}
+
+			return responseWithError(c, http.StatusInternalServerError, err)
 		}
 
 		c.Response().Header().Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %s", token))

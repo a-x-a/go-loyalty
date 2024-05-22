@@ -36,7 +36,8 @@ func New(s APIService) *Handler {
 
 func responseWithError(c echo.Context, code int, err error) error {
 	// resp := fmt.Sprintf("%d: %s", code, err.Error())
-	return c.JSON(code, err)
+	// return c.JSON(code, err)
+	return c.NoContent(code)
 }
 
 func responseWithCode(c echo.Context, code int) error {
@@ -45,10 +46,10 @@ func responseWithCode(c echo.Context, code int) error {
 }
 
 func getUserId(c echo.Context) (int64, error) {
-	userID, ok := c.Get("userID").(int64)
+	uid, ok := c.Get("uid").(int64)
 	if !ok {
 		return 0, errors.New("user id is not defined")
 	}
 
-	return userID, nil
+	return uid, nil
 }

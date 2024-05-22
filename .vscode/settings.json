@@ -1,0 +1,15 @@
+{
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "server": "db.home.lab",
+      "port": 5432,
+      "askForPassword": true,
+      "driver": "PostgreSQL",
+      "name": "go-loyalty",
+      "database": "go-loyalty",
+      "username": "postgres",
+      "group": "db.home.lab"
+    }
+  ]
+}

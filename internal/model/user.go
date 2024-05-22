@@ -1,9 +1,5 @@
 package model
 
-import (
-	"errors"
-)
-
 type User struct {
 	login    string
 	password string
@@ -16,7 +12,7 @@ func NewUser(login, password string) (*User, error) {
 	}
 
 	if !user.Validate() {
-		return nil, errors.New("не верный логин или пароль")
+		return nil, ErrInvalidUsernameOrPassword
 	}
 
 	return &user, nil

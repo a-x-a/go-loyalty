@@ -5,24 +5,26 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
-// type DTOUser struct {
-// 	ID       int64
-// 	Login    string
-// 	Password string
-// }
+type DTOUser struct {
+	ID       int64
+	Login    string
+	Password string
+}
 
 type UserStorage struct {
 	db *sqlx.DB
+	l  *zap.Logger
 }
 
-func NewUserStorage(db *sqlx.DB) *UserStorage {
-	return &UserStorage{db}
+func NewUserStorage(db *sqlx.DB, l *zap.Logger) *UserStorage {
+	return &UserStorage{db, l}
 }
 
 func (s *UserStorage) AddUser(ctx context.Context, login, pwdHash string) error {
-	queryText := `INSERT INTO user(login, password) VALUES ($1, $2);`
+	queryText := `INSERT INTO "user"(login, password) VALUES ($1, $2);`
 
 	err := WithTx(ctx, s.db, func(ctx context.Context, tx *sqlx.Tx) error {
 		result, err := tx.ExecContext(ctx, queryText, login, pwdHash)
@@ -38,19 +40,19 @@ func (s *UserStorage) AddUser(ctx context.Context, login, pwdHash string) error 
 	})
 
 	if err != nil {
-		return errors.Wrap(err, "UserStorage.AddUser")
+		return errors.Wrap(err, "userstorage.adduser")
 	}
 
 	return nil
 }
 
-func (s *UserStorage) GetUserID(ctx context.Context, login, pwdHash string) (int64, error) {
-	var uid int64
+func (s *UserStorage) GetUser(ctx context.Context, login string) (*DTOUser, error) {
+	queryText := `SELECT id, login, password FROM "user" WHERE login = $1;`
 
-	queryText := `SELECT id FROM user WHERE login = $1 AND password = $2;`
+	user := DTOUser{}
 
 	err := WithTx(ctx, s.db, func(ctx context.Context, tx *sqlx.Tx) error {
-		if err := tx.SelectContext(ctx, uid, queryText, login, pwdHash); err != nil {
+		if err := tx.GetContext(ctx, &user, queryText, login); err != nil {
 			return err
 		}
 
@@ -58,8 +60,8 @@ func (s *UserStorage) GetUserID(ctx context.Context, login, pwdHash string) (int
 	})
 
 	if err != nil {
-		return uid, errors.Wrap(err, "UserStorage.GetUserID")
+		return &user, errors.Wrap(err, "userstorage.getuserid")
 	}
 
-	return uid, nil
+	return &user, nil
 }
