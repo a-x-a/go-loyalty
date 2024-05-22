@@ -24,13 +24,13 @@ type (
 	}
 
 	Handler struct {
-		Service APIService
+		s APIService
 	}
 )
 
 func New(s APIService) *Handler {
 	return &Handler{
-		Service: s,
+		s: s,
 	}
 }
 

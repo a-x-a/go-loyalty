@@ -26,7 +26,7 @@ func (h *Handler) UploadOrder() echo.HandlerFunc {
 		ctx, cancel := context.WithCancel(c.Request().Context())
 		defer cancel()
 
-		err = h.Service.UploadOrder(ctx, userID, orderNumber)
+		err = h.s.UploadOrder(ctx, userID, orderNumber)
 		if err != nil {
 			return responseWithError(c, http.StatusBadRequest, err)
 		}
@@ -48,7 +48,7 @@ func (h *Handler) GetAllOrders() echo.HandlerFunc {
 		ctx, cancel := context.WithCancel(c.Request().Context())
 		defer cancel()
 
-		orders, err := h.Service.GetAllOrders(ctx, userID)
+		orders, err := h.s.GetAllOrders(ctx, userID)
 		if err != nil {
 			return responseWithError(c, http.StatusBadRequest, err)
 		}

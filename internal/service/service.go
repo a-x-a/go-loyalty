@@ -40,6 +40,7 @@ func New(userService UserService, log *zap.Logger) *Service {
 	}
 }
 
+// UserService.
 func (s *Service) RegisterUser(ctx context.Context, login, password string) (string, error) {
 	err := s.UserService.Register(ctx, login, password)
 	if err != nil {
@@ -53,6 +54,9 @@ func (s *Service) Login(ctx context.Context, login, password string) (string, er
 	return s.UserService.Login(ctx, login, password)
 }
 
+// OrderService.
+
+// BallanceService.
 func (s *Service) GetBalance(ctx context.Context, userID int64) (*model.Balance, error) {
 	b := model.Balance{
 		Current: 15.0,

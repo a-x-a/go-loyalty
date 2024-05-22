@@ -18,7 +18,7 @@ func (h *Handler) GetBalance() echo.HandlerFunc {
 		ctx, cancel := context.WithCancel(c.Request().Context())
 		defer cancel()
 
-		balance, err := h.Service.GetBalance(ctx, uid)
+		balance, err := h.s.GetBalance(ctx, uid)
 		if err != nil {
 			return responseWithError(c, http.StatusBadRequest, err)
 		}
@@ -50,7 +50,7 @@ func (h *Handler) WithdrawBalance() echo.HandlerFunc {
 		ctx, cancel := context.WithCancel(c.Request().Context())
 		defer cancel()
 
-		err = h.Service.WithdrawBalance(ctx, uid, data.Order, data.Sum)
+		err = h.s.WithdrawBalance(ctx, uid, data.Order, data.Sum)
 		if err != nil {
 			return responseWithError(c, http.StatusBadRequest, err)
 		}
@@ -77,7 +77,7 @@ func (h *Handler) WithdrawalsBalance() echo.HandlerFunc {
 		ctx, cancel := context.WithCancel(c.Request().Context())
 		defer cancel()
 
-		withdrawals, err := h.Service.GetWithdrawalsBalance(ctx, uid)
+		withdrawals, err := h.s.GetWithdrawalsBalance(ctx, uid)
 		if err != nil {
 			return responseWithError(c, http.StatusBadRequest, err)
 		}

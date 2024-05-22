@@ -27,7 +27,7 @@ func (h *Handler) RegisterUser() echo.HandlerFunc {
 		ctx, cancel := context.WithCancel(c.Request().Context())
 		defer cancel()
 
-		token, err := h.Service.RegisterUser(ctx, data.Login, data.Password)
+		token, err := h.s.RegisterUser(ctx, data.Login, data.Password)
 		if err != nil {
 			switch {
 			case errors.Is(err, model.ErrInvalidRequestFormat):
@@ -65,7 +65,7 @@ func (h *Handler) Login() echo.HandlerFunc {
 		ctx, cancel := context.WithCancel(c.Request().Context())
 		defer cancel()
 
-		token, err := h.Service.Login(ctx, data.Login, data.Password)
+		token, err := h.s.Login(ctx, data.Login, data.Password)
 		if err != nil {
 			switch {
 			case errors.Is(err, model.ErrInvalidRequestFormat):
