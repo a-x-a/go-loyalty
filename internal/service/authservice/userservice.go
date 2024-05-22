@@ -20,19 +20,19 @@ type (
 		GetUser(ctx context.Context, login string) (*storage.DTOUser, error)
 	}
 
-	UserService struct {
+	AuthService struct {
 		storage UserStorage
 		cfg     config.ServiceConfig
 		l       *zap.Logger
 	}
 )
 
-func New(storage UserStorage, cfg config.ServiceConfig, l *zap.Logger) *UserService {
-	return &UserService{storage, cfg, l}
+func New(storage UserStorage, cfg config.ServiceConfig, l *zap.Logger) *AuthService {
+	return &AuthService{storage, cfg, l}
 }
 
 // Регистрация нового пользователя.
-func (s *UserService) Register(ctx context.Context, login, password string) error {
+func (s *AuthService) Register(ctx context.Context, login, password string) error {
 	_, err := model.NewUser(login, password)
 	if err != nil {
 		s.l.Debug("failed to create user", zap.Error(errors.Wrap(err, "model.newuser")))
@@ -53,13 +53,13 @@ func (s *UserService) Register(ctx context.Context, login, password string) erro
 		return model.ErrUsernameAlreadyTaken
 	}
 
-	s.l.Info("user created", zap.String("succesful", "userservice.register"))
+	s.l.Info("user created", zap.String("succesful", "authservice.register"))
 
 	return nil
 }
 
 // Авторизация пользователя.
-func (s *UserService) Login(ctx context.Context, login, password string) (string, error) {
+func (s *AuthService) Login(ctx context.Context, login, password string) (string, error) {
 	_, err := model.NewUser(login, password)
 	if err != nil {
 		s.l.Debug("failed to create user", zap.Error(errors.Wrap(err, "model.newuser")))
@@ -85,7 +85,7 @@ func (s *UserService) Login(ctx context.Context, login, password string) (string
 		return "", err
 	}
 
-	s.l.Info("login user", zap.String("succesful", "userservice.login"))
+	s.l.Info("login user", zap.String("succesful", "authservice.login"))
 
 	return token, nil
 }
