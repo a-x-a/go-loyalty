@@ -22,8 +22,8 @@ type (
 	}
 
 	OrderService interface {
-		UploadOrder(ctx context.Context, uid int64, number string) error
-		GetAllOrders(ctx context.Context, uid int64) (*model.Orders, error)
+		Upload(ctx context.Context, uid int64, number string) error
+		GetAll(ctx context.Context, uid int64) (*model.Orders, error)
 		CheckNumber(ctx context.Context, number string) error
 	}
 
@@ -34,9 +34,10 @@ type (
 	}
 )
 
-func New(userService UserService, balanceService BallanceService, log *zap.Logger) *Service {
+func New(userService UserService, orderService OrderService, balanceService BallanceService, log *zap.Logger) *Service {
 	return &Service{
 		UserService:     userService,
+		OrderService:    orderService,
 		BallanceService: balanceService,
 		l:               log,
 	}
@@ -58,11 +59,11 @@ func (s *Service) Login(ctx context.Context, login, password string) (string, er
 
 // Order service.
 func (s *Service) UploadOrder(ctx context.Context, uid int64, number string) error {
-	return nil
+	return s.OrderService.Upload(ctx, uid, number)
 }
 
 func (s *Service) GetAllOrders(ctx context.Context, uid int64) (*model.Orders, error) {
-	orders, err := s.OrderService.GetAllOrders(ctx, uid)
+	orders, err := s.OrderService.GetAll(ctx, uid)
 	if err != nil {
 		return nil, err
 	}
@@ -71,8 +72,7 @@ func (s *Service) GetAllOrders(ctx context.Context, uid int64) (*model.Orders, e
 }
 
 func (s *Service) CheckOrderNumber(ctx context.Context, number string) error {
-	// s.OrderService.CheckNumber(ctx, number)
-	return nil
+	return s.OrderService.CheckNumber(ctx, number)
 }
 
 // Ballance service.
@@ -90,13 +90,12 @@ func (s *Service) WithdrawBalance(ctx context.Context, uid int64, number string,
 		return nil
 	}
 
-	// TODO
-	// проверить номер заказа orderservice.CheckOrderNumber(ctx context.Context, number string) error
+	// проверить номер заказа.
 	if err := s.CheckOrderNumber(ctx, number); err != nil {
 		return err
 	}
-	// return customerrors.ErrInvalidOrderNumber
-	// выполнить запрос на списание
+
+	// выполнить запрос на списание.
 	err := s.BallanceService.Withdraw(ctx, uid, number, sum)
 
 	return err

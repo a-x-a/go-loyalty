@@ -4,12 +4,10 @@ import "time"
 
 type (
 	Order struct {
-		Number      string      `json:"number"`
-		Status      string      `json:"status"`
-		Accrual     float64     `json:"accrual,omitempty"`
-		UploadedAt  time.Ticker `json:"uploaded_at,omitempty"`
-		ProcessedAt time.Time   `json:"processed_at,omitempty"`
-		UserID      int64       `json:"-"`
+		Number     string    `json:"number"`
+		Status     string    `json:"status"`
+		Accrual    float64   `json:"accrual,omitempty"`
+		UploadedAt time.Time `json:"uploaded_at,omitempty"`
 	}
 
 	Orders []Order

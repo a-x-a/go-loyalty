@@ -23,7 +23,7 @@ func (h *Handler) GetBalance() echo.HandlerFunc {
 
 		balance, err := h.s.GetBalance(ctx, uid)
 		if err != nil {
-			return responseWithError(c, http.StatusBadRequest, err)
+			return responseWithError(c, http.StatusInternalServerError, err)
 		}
 
 		return c.JSON(http.StatusOK, balance)
@@ -81,7 +81,7 @@ func (h *Handler) WithdrawalsBalance() echo.HandlerFunc {
 
 		data := &withdrawRequwst{}
 		if err := c.Bind(&data); err != nil {
-			return responseWithError(c, http.StatusBadRequest, err)
+			return responseWithError(c, http.StatusInternalServerError, err)
 		}
 
 		ctx, cancel := context.WithCancel(c.Request().Context())
@@ -89,6 +89,11 @@ func (h *Handler) WithdrawalsBalance() echo.HandlerFunc {
 
 		withdrawals, err := h.s.GetWithdrawalsBalance(ctx, uid)
 		if err != nil {
+			switch {
+			case errors.Is(err, customerrors.ErrNotWithdrawals):
+				return responseWithError(c, http.StatusNoContent, err)
+			}
+
 			return responseWithError(c, http.StatusBadRequest, err)
 		}
 

@@ -1,0 +1,80 @@
+package storage
+
+import (
+	"context"
+	"time"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
+	"go.uber.org/zap"
+
+	"github.com/a-x-a/go-loyalty/internal/customerrors"
+)
+
+type (
+	DTOOrder struct {
+		Number     string    `db:"number"`
+		Status     int       `db:"status"`
+		Accrual    float64   `db:"accrual"`
+		UploadedAt time.Time `db:"uploaded_at"`
+	}
+
+	DTOOrders []DTOOrder
+
+	OrderStorage struct {
+		db *sqlx.DB
+		l  *zap.Logger
+	}
+)
+
+func NewOrderStorage(db *sqlx.DB, l *zap.Logger) *OrderStorage {
+	return &OrderStorage{db, l}
+}
+
+func (s *OrderStorage) Add(ctx context.Context, uid int64, number string) error {
+	queryText := `INSERT INTO "order"(number, user_id) VALUES ($1, $2);`
+
+	err := WithTx(ctx, s.db, func(ctx context.Context, tx *sqlx.Tx) error {
+		_, err := tx.ExecContext(ctx, queryText, number, uid)
+		if err == nil {
+			return nil // OrderInProcess
+		}
+		// проверим кому принадлежит заказ в случае ошибки.
+		var id int64
+		queryText = `SELECT user_id FROM "order" WHERE number = $1;`
+		if err := tx.SelectContext(ctx, &id, queryText, number); err != nil {
+			return err
+		}
+
+		if id == uid {
+			return customerrors.ErrOrderUploadedByUser
+		}
+
+		return customerrors.ErrOrderUploadedByAnotherUser
+	})
+
+	if err != nil {
+		return errors.Wrap(err, "orderstorage.add")
+	}
+
+	return nil // OrderInProcess
+}
+
+func (s *OrderStorage) GetAll(ctx context.Context, uid int64) (*DTOOrders, error) {
+	queryText := `SELECT number, status, accrual, uploaded_at FROM "order" WHERE user_id = $1;`
+
+	orders := DTOOrders{}
+	err := WithTx(ctx, s.db, func(ctx context.Context, tx *sqlx.Tx) error {
+		if err := tx.SelectContext(ctx, &orders, queryText, uid); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return &orders, errors.Wrap(err, "orderstorage.getall")
+	}
+
+	return &orders, nil
+}

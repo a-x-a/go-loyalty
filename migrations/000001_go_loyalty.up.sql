@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS "user"(
 CREATE TABLE IF NOT EXISTS "balance"
 (
     user_id int REFERENCES "user"(id) PRIMARY KEY,
-    current numeric(15,2),
-    withdrawn numeric(15,2)
+    current numeric(15,2) NOT NULL DEFAULT 0,
+    withdrawn numeric(15,2) NOT NULL DEFAULT 0
 );
 
 -- withdraw
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS "withdraw"
 (
     user_id int REFERENCES "user"(id) ,
     "order" varchar NOT NULL UNIQUE,
-    sum numeric(15,2),
+    sum numeric(15,2) NOT NULL DEFAULT 0,
     processed_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, "order")
 );
@@ -33,6 +33,6 @@ CREATE TABLE IF NOT EXISTS "order"
     "number" varchar PRIMARY KEY,
     user_id int REFERENCES "user"(id) ,
     status int NOT NULL DEFAULT 1,
-    accrual numeric(15,2),
+    accrual numeric(15,2) NOT NULL DEFAULT 0,
     uploaded_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

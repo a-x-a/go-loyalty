@@ -15,6 +15,7 @@ import (
 	"github.com/a-x-a/go-loyalty/internal/service"
 	"github.com/a-x-a/go-loyalty/internal/service/authservice"
 	"github.com/a-x-a/go-loyalty/internal/service/balanceservice"
+	"github.com/a-x-a/go-loyalty/internal/service/orderservice"
 	"github.com/a-x-a/go-loyalty/internal/storage"
 	"github.com/a-x-a/go-loyalty/internal/util"
 )
@@ -46,11 +47,13 @@ func NewServer() *Server {
 	userStorage := storage.NewUserStorage(dbConn, log)
 	userService := authservice.New(userStorage, cfg, log)
 	// Order service.
+	orderStorage := storage.NewOrderStorage(dbConn, log)
+	orderService := orderservice.New(orderStorage, cfg, log)
 	// Ballance service.
 	balanceStorage := storage.NewBalanceStorage(dbConn, log)
 	balanceService := balanceservice.New(balanceStorage, cfg, log)
 	// Accrual service.
-	s := service.New(userService, balanceService, log)
+	s := service.New(userService, orderService, balanceService, log)
 	h := handler.New(s)
 
 	return &Server{
@@ -76,6 +79,8 @@ func (s *Server) Run(ctx context.Context) error {
 	r.POST("/balance/withdraw", s.h.WithdrawBalance())
 	r.GET("/withdrawals", s.h.WithdrawalsBalance())
 
+	s.l.Info("start http server", zap.String("address", s.cfg.RunAddress))
+
 	if err := s.e.Start(s.cfg.RunAddress); err != http.ErrServerClosed {
 		s.l.Warn("failed to start http server", zap.Error(errors.Wrap(err, "echo.start")))
 	}
@@ -84,7 +89,11 @@ func (s *Server) Run(ctx context.Context) error {
 }
 
 func (s *Server) Shutdown(ctx context.Context) {
+	s.l.Info("start server shutdown...")
+
 	if err := s.e.Shutdown(ctx); err != nil {
-		s.l.Warn("server shutdowning error", zap.Error(errors.Wrap(err, "shutdown")))
+		s.l.Warn("server shutdowning error", zap.Error(errors.Wrap(err, "server.shutdown")))
 	}
+
+	s.l.Info("successfully server shutdowning")
 }

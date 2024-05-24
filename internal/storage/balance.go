@@ -13,13 +13,11 @@ import (
 
 type (
 	DTOBalance struct {
-		// UID        int64   `db:"user_id"`
 		Current   float64 `db:"current"`
 		Withdrawn float64 `db:"withdrawn"`
 	}
 
 	DTOWithdrawal struct {
-		// UID         int64     `db:"user_id"`
 		Order       string    `json:"order" db:"order"`
 		Sum         float64   `json:"sum,omitempty" db:"sum"`
 		ProcessedAt time.Time `json:"processed_at,omitempty" db:"processed_at"`
@@ -88,7 +86,7 @@ func (s *BalanceStorage) Withdraw(ctx context.Context, uid int64, number string,
 	balance := DTOBalance{}
 
 	err := WithTx(ctx, s.db, func(ctx context.Context, tx *sqlx.Tx) error {
-		// добавим запись об списании.
+		// добавим запись о списании.
 		queryText := `INSERT INTO "withdraw"
 			(user_id, "order", sum)
 			VALUES($1, $2, $3)`

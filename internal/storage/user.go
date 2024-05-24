@@ -8,16 +8,18 @@ import (
 	"go.uber.org/zap"
 )
 
-type DTOUser struct {
-	ID       int64
-	Login    string
-	Password string
-}
+type (
+	DTOUser struct {
+		ID       int64
+		Login    string
+		Password string
+	}
 
-type UserStorage struct {
-	db *sqlx.DB
-	l  *zap.Logger
-}
+	UserStorage struct {
+		db *sqlx.DB
+		l  *zap.Logger
+	}
+)
 
 func NewUserStorage(db *sqlx.DB, l *zap.Logger) *UserStorage {
 	return &UserStorage{db, l}
