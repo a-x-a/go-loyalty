@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/a-x-a/go-loyalty/internal/config"
+	"github.com/a-x-a/go-loyalty/internal/customerrors"
 	"github.com/a-x-a/go-loyalty/internal/model"
 	"github.com/a-x-a/go-loyalty/internal/storage"
 )
@@ -66,6 +67,10 @@ func (s *BalanceService) GetWithdrawals(ctx context.Context, uid int64) (*model.
 	}
 
 	s.l.Debug("getwithdrawals", zap.Any("withdrawals", w))
+
+	if len(*w) == 0 {
+		return nil, customerrors.ErrNotWithdrawals
+	}
 
 	withdrawals := model.Withdrawals{}
 	for _, v := range *w {

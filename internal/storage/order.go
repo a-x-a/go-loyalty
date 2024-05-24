@@ -32,25 +32,24 @@ func NewOrderStorage(db *sqlx.DB, l *zap.Logger) *OrderStorage {
 }
 
 func (s *OrderStorage) Add(ctx context.Context, uid int64, number string) error {
-	queryText := `INSERT INTO "order"(number, user_id) VALUES ($1, $2);`
-
 	err := WithTx(ctx, s.db, func(ctx context.Context, tx *sqlx.Tx) error {
-		_, err := tx.ExecContext(ctx, queryText, number, uid)
-		if err == nil {
-			return nil // OrderInProcess
-		}
-		// проверим кому принадлежит заказ в случае ошибки.
+		// проверим кому принадлежит заказ.
 		var id int64
-		queryText = `SELECT user_id FROM "order" WHERE number = $1;`
-		if err := tx.SelectContext(ctx, &id, queryText, number); err != nil {
+		queryText := `SELECT user_id FROM "order" WHERE number = $1;`
+		if err := tx.GetContext(ctx, &id, queryText, number); err == nil {
+			if id == uid {
+				return customerrors.ErrOrderUploadedByUser
+			}
+
+			return customerrors.ErrOrderUploadedByAnotherUser
+		}
+
+		queryText = `INSERT INTO "order"(number, user_id) VALUES ($1, $2);`
+		if _, err := tx.ExecContext(ctx, queryText, number, uid); err != nil {
 			return err
 		}
 
-		if id == uid {
-			return customerrors.ErrOrderUploadedByUser
-		}
-
-		return customerrors.ErrOrderUploadedByAnotherUser
+		return nil // OrderInProcess
 	})
 
 	if err != nil {

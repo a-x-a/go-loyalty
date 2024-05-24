@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -141,6 +142,7 @@ func (s *BalanceStorage) GetWithdrawals(ctx context.Context, uid int64) (*DTOWit
 	withdrawals := DTOWithdrawals{}
 	err := WithTx(ctx, s.db, func(ctx context.Context, tx *sqlx.Tx) error {
 		if err := tx.SelectContext(ctx, &withdrawals, queryText, uid); err != nil {
+			fmt.Println("err", err)
 			return err
 		}
 
