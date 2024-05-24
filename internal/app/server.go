@@ -14,6 +14,7 @@ import (
 	"github.com/a-x-a/go-loyalty/internal/logger"
 	"github.com/a-x-a/go-loyalty/internal/service"
 	"github.com/a-x-a/go-loyalty/internal/service/authservice"
+	"github.com/a-x-a/go-loyalty/internal/service/balanceservice"
 	"github.com/a-x-a/go-loyalty/internal/storage"
 	"github.com/a-x-a/go-loyalty/internal/util"
 )
@@ -46,8 +47,10 @@ func NewServer() *Server {
 	userService := authservice.New(userStorage, cfg, log)
 	// Order service.
 	// Ballance service.
+	balanceStorage := storage.NewBalanceStorage(dbConn, log)
+	balanceService := balanceservice.New(balanceStorage, cfg, log)
 	// Accrual service.
-	s := service.New(userService, log)
+	s := service.New(userService, balanceService, log)
 	h := handler.New(s)
 
 	return &Server{

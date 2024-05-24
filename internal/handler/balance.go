@@ -2,9 +2,12 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+
+	"github.com/a-x-a/go-loyalty/internal/customerrors"
 )
 
 // Получение текущего баланса пользователя
@@ -44,7 +47,7 @@ func (h *Handler) WithdrawBalance() echo.HandlerFunc {
 
 		data := &withdrawRequwst{}
 		if err := c.Bind(&data); err != nil {
-			return responseWithError(c, http.StatusBadRequest, err)
+			return responseWithError(c, http.StatusInternalServerError, err)
 		}
 
 		ctx, cancel := context.WithCancel(c.Request().Context())
@@ -52,7 +55,14 @@ func (h *Handler) WithdrawBalance() echo.HandlerFunc {
 
 		err = h.s.WithdrawBalance(ctx, uid, data.Order, data.Sum)
 		if err != nil {
-			return responseWithError(c, http.StatusBadRequest, err)
+			switch {
+			case errors.Is(err, customerrors.ErrInsufficientFunds):
+				return responseWithError(c, http.StatusPaymentRequired, err)
+			case errors.Is(err, customerrors.ErrInvalidOrderNumber):
+				return responseWithError(c, http.StatusUnprocessableEntity, err)
+			}
+
+			return responseWithError(c, http.StatusInternalServerError, err)
 		}
 
 		return responseWithCode(c, http.StatusOK)

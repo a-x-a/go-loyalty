@@ -23,30 +23,30 @@ func NewUserStorage(db *sqlx.DB, l *zap.Logger) *UserStorage {
 	return &UserStorage{db, l}
 }
 
-func (s *UserStorage) AddUser(ctx context.Context, login, pwdHash string) error {
+func (s *UserStorage) Add(ctx context.Context, login, pwdHash string) error {
 	queryText := `INSERT INTO "user"(login, password) VALUES ($1, $2);`
 
 	err := WithTx(ctx, s.db, func(ctx context.Context, tx *sqlx.Tx) error {
-		result, err := tx.ExecContext(ctx, queryText, login, pwdHash)
+		_, err := tx.ExecContext(ctx, queryText, login, pwdHash)
 		if err != nil {
 			return err
 		}
 
-		if _, err := result.RowsAffected(); err != nil {
-			return err
-		}
+		// if _, err := result.RowsAffected(); err != nil {
+		// 	return err
+		// }
 
 		return nil
 	})
 
 	if err != nil {
-		return errors.Wrap(err, "userstorage.adduser")
+		return errors.Wrap(err, "userstorage.add")
 	}
 
 	return nil
 }
 
-func (s *UserStorage) GetUser(ctx context.Context, login string) (*DTOUser, error) {
+func (s *UserStorage) Get(ctx context.Context, login string) (*DTOUser, error) {
 	queryText := `SELECT id, login, password FROM "user" WHERE login = $1;`
 
 	user := DTOUser{}
@@ -60,7 +60,7 @@ func (s *UserStorage) GetUser(ctx context.Context, login string) (*DTOUser, erro
 	})
 
 	if err != nil {
-		return &user, errors.Wrap(err, "userstorage.getuserid")
+		return &user, errors.Wrap(err, "userstorage.get")
 	}
 
 	return &user, nil

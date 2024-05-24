@@ -1,5 +1,7 @@
 package model
 
+import "github.com/a-x-a/go-loyalty/internal/customerrors"
+
 type User struct {
 	login    string
 	password string
@@ -12,7 +14,7 @@ func NewUser(login, password string) (*User, error) {
 	}
 
 	if !user.Validate() {
-		return nil, ErrInvalidUsernameOrPassword
+		return nil, customerrors.ErrInvalidUsernameOrPassword
 	}
 
 	return &user, nil

@@ -13,10 +13,4 @@ type (
 	}
 
 	Orders []Order
-
-	Withdrawals struct {
-		Number      string    `json:"order"`
-		Accrual     float64   `json:"sum,omitempty"`
-		ProcessedAt time.Time `json:"processed_at,omitempty"`
-	}
 )

@@ -15,12 +15,12 @@ type (
 		RegisterUser(ctx context.Context, login, password string) (string, error)
 		Login(ctx context.Context, login, password string) (string, error)
 		// OrderService
-		UploadOrder(ctx context.Context, userID int64, number string) error
-		GetAllOrders(ctx context.Context, userID int64) (*model.Orders, error)
+		UploadOrder(ctx context.Context, uid int64, number string) error
+		GetAllOrders(ctx context.Context, uid int64) (*model.Orders, error)
 		// BallanceService
-		GetBalance(ctx context.Context, userID int64) (*model.Balance, error)
-		WithdrawBalance(ctx context.Context, userID int64, number string, sum float64) error
-		GetWithdrawalsBalance(ctx context.Context, userID int64) (*model.Withdrawals, error)
+		GetBalance(ctx context.Context, uid int64) (*model.Balance, error)
+		WithdrawBalance(ctx context.Context, uid int64, number string, sum float64) error
+		GetWithdrawalsBalance(ctx context.Context, uid int64) (*model.Withdrawals, error)
 	}
 
 	Handler struct {

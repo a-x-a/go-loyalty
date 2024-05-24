@@ -1,1 +1,4 @@
-DROP TABLE "user";
+DROP TABLE IF EXISTS "user";
+DROP TABLE IF EXISTS "balance";
+DROP TABLE IF EXISTS "withdraw";
+DROP TABLE IF EXISTS "order";

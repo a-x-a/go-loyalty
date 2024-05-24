@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 
-	"github.com/a-x-a/go-loyalty/internal/model"
+	"github.com/a-x-a/go-loyalty/internal/customerrors"
 )
 
 type registerUser struct {
@@ -30,11 +30,11 @@ func (h *Handler) RegisterUser() echo.HandlerFunc {
 		token, err := h.s.RegisterUser(ctx, data.Login, data.Password)
 		if err != nil {
 			switch {
-			case errors.Is(err, model.ErrInvalidRequestFormat):
+			case errors.Is(err, customerrors.ErrInvalidRequestFormat):
 				return responseWithError(c, http.StatusBadRequest, err)
-			case errors.Is(err, model.ErrInvalidUsernameOrPassword):
+			case errors.Is(err, customerrors.ErrInvalidUsernameOrPassword):
 				return responseWithError(c, http.StatusBadRequest, err)
-			case errors.Is(err, model.ErrUsernameAlreadyTaken):
+			case errors.Is(err, customerrors.ErrUsernameAlreadyTaken):
 				return responseWithError(c, http.StatusConflict, err)
 			}
 
@@ -68,9 +68,9 @@ func (h *Handler) Login() echo.HandlerFunc {
 		token, err := h.s.Login(ctx, data.Login, data.Password)
 		if err != nil {
 			switch {
-			case errors.Is(err, model.ErrInvalidRequestFormat):
+			case errors.Is(err, customerrors.ErrInvalidRequestFormat):
 				return responseWithError(c, http.StatusBadRequest, err)
-			case errors.Is(err, model.ErrInvalidUsernameOrPassword):
+			case errors.Is(err, customerrors.ErrInvalidUsernameOrPassword):
 				return responseWithError(c, http.StatusUnauthorized, err)
 			}
 

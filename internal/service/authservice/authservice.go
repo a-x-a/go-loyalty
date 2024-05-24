@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/a-x-a/go-loyalty/internal/config"
+	"github.com/a-x-a/go-loyalty/internal/customerrors"
 	"github.com/a-x-a/go-loyalty/internal/model"
 	"github.com/a-x-a/go-loyalty/internal/storage"
 	"github.com/a-x-a/go-loyalty/internal/util"
@@ -16,8 +17,8 @@ import (
 
 type (
 	UserStorage interface {
-		AddUser(ctx context.Context, login, pwdHash string) error
-		GetUser(ctx context.Context, login string) (*storage.DTOUser, error)
+		Add(ctx context.Context, login, pwdHash string) error
+		Get(ctx context.Context, login string) (*storage.DTOUser, error)
 	}
 
 	AuthService struct {
@@ -36,7 +37,7 @@ func (s *AuthService) Register(ctx context.Context, login, password string) erro
 	_, err := model.NewUser(login, password)
 	if err != nil {
 		s.l.Debug("failed to create user", zap.Error(errors.Wrap(err, "model.newuser")))
-		return model.ErrInvalidRequestFormat
+		return customerrors.ErrInvalidRequestFormat
 	}
 
 	// Генерируем хэш пароля.
@@ -47,10 +48,10 @@ func (s *AuthService) Register(ctx context.Context, login, password string) erro
 	}
 
 	// Сохраняем пользователя в БД.
-	err = s.storage.AddUser(ctx, login, string(pwdHash))
+	err = s.storage.Add(ctx, login, string(pwdHash))
 	if err != nil {
 		s.l.Debug("failed to add user", zap.Error(errors.Wrap(err, "storage.adduser")))
-		return model.ErrUsernameAlreadyTaken
+		return customerrors.ErrUsernameAlreadyTaken
 	}
 
 	s.l.Info("user created", zap.String("succesful", "authservice.register"))
@@ -63,19 +64,19 @@ func (s *AuthService) Login(ctx context.Context, login, password string) (string
 	_, err := model.NewUser(login, password)
 	if err != nil {
 		s.l.Debug("failed to create user", zap.Error(errors.Wrap(err, "model.newuser")))
-		return "", model.ErrInvalidRequestFormat
+		return "", customerrors.ErrInvalidRequestFormat
 	}
 
-	user, err := s.storage.GetUser(ctx, login)
+	user, err := s.storage.Get(ctx, login)
 	if err != nil {
 		s.l.Debug("failed to get user", zap.Error(errors.Wrap(err, "storage.getuser")))
-		return "", model.ErrInvalidUsernameOrPassword
+		return "", customerrors.ErrInvalidUsernameOrPassword
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
 		s.l.Debug("invalid login or password", zap.Error(errors.Wrap(err, "bcrypt.comparehashandpassword")))
-		return "", model.ErrInvalidUsernameOrPassword
+		return "", customerrors.ErrInvalidUsernameOrPassword
 	}
 
 	// Сгенерировать JWT.
