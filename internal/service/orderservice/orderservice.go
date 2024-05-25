@@ -2,7 +2,6 @@ package orderservice
 
 import (
 	"context"
-	"strconv"
 
 	"go.uber.org/zap"
 
@@ -55,7 +54,7 @@ func (s *OrderService) GetAll(ctx context.Context, uid int64) (*model.Orders, er
 	for _, v := range *o {
 		order := model.Order{
 			Number:     v.Number,
-			Status:     strconv.Itoa(v.Status), // TODO строковое представление статуса
+			Status:     model.OrderStatus(v.Status).String(),
 			Accrual:    v.Accrual,
 			UploadedAt: v.UploadedAt.Local(),
 		}
