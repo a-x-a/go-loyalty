@@ -66,7 +66,7 @@ func (h *Handler) GetAllOrders() echo.HandlerFunc {
 		orders, err := h.s.GetAllOrders(ctx, uid)
 		if err != nil {
 			switch {
-			case errors.Is(err, customerrors.ErrNotOrders):
+			case errors.Is(err, customerrors.ErrNoContent):
 				return responseWithCode(c, http.StatusNoContent)
 			}
 

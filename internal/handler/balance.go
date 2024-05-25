@@ -90,7 +90,7 @@ func (h *Handler) WithdrawalsBalance() echo.HandlerFunc {
 		withdrawals, err := h.s.GetWithdrawalsBalance(ctx, uid)
 		if err != nil {
 			switch {
-			case errors.Is(err, customerrors.ErrNotWithdrawals):
+			case errors.Is(err, customerrors.ErrNoContent):
 				return responseWithError(c, http.StatusNoContent, err)
 			}
 

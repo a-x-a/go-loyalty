@@ -69,7 +69,7 @@ func (s *BalanceService) GetWithdrawals(ctx context.Context, uid int64) (*model.
 	s.l.Debug("getwithdrawals", zap.Any("withdrawals", w))
 
 	if len(*w) == 0 {
-		return nil, customerrors.ErrNotWithdrawals
+		return nil, customerrors.ErrNoContent
 	}
 
 	withdrawals := model.Withdrawals{}

@@ -64,7 +64,6 @@ func (s *OrderService) GetAll(ctx context.Context, uid int64) (*model.Orders, er
 	return &orders, nil
 }
 
-// проверить номер заказа
 func (s *OrderService) CheckNumber(ctx context.Context, number string) error {
 	if luhn.Check(number) {
 		return nil
