@@ -6,6 +6,7 @@ import (
 
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
@@ -65,6 +66,9 @@ func NewServer() *Server {
 }
 
 func (s *Server) Run(ctx context.Context) error {
+	s.e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
+		Level: 5,
+	}))
 	s.e.POST("/api/user/register", s.h.RegisterUser())
 	s.e.POST("/api/user/login", s.h.Login())
 
