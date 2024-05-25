@@ -12,7 +12,7 @@ import (
 	"github.com/a-x-a/go-loyalty/internal/customerrors"
 	"github.com/a-x-a/go-loyalty/internal/model"
 	"github.com/a-x-a/go-loyalty/internal/storage"
-	"github.com/a-x-a/go-loyalty/pkg/luna"
+	"github.com/a-x-a/go-loyalty/pkg/luhn"
 )
 
 type (
@@ -66,7 +66,7 @@ func (s *OrderService) GetAll(ctx context.Context, uid int64) (*model.Orders, er
 
 // проверить номер заказа
 func (s *OrderService) CheckNumber(ctx context.Context, number string) error {
-	if luna.Check(number) {
+	if luhn.Check(number) {
 		return nil
 	}
 
