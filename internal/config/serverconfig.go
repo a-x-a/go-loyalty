@@ -33,8 +33,8 @@ func NewServiceConfig() ServiceConfig {
 		DatabaseURI:          "",
 		AccrualSystemAddress: "",
 		Secret:               "secret",
-		TokenTTL:             time.Hour * time.Duration(24),
-		AccrualFrequency:     time.Second * time.Duration(15),
+		TokenTTL:             time.Hour * 24,
+		AccrualFrequency:     time.Second * 15,
 		AccrualRateLimit:     5,
 	}
 
