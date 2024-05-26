@@ -419,27 +419,27 @@ linters-settings:
     # Specify the order of tags, the other tags will be sorted by name.
     # This option will be ignored if `sort` is false.
     # Default: []
-    order:
-      - json
-      - yaml
-      - yml
-      - toml
-      - mapstructure
-      - binding
-      - validate
+    # order:
+    #   - json
+    #   - yaml
+    #   - yml
+    #   - toml
+    #   - mapstructure
+    #   - binding
+    #   - validate
     # Whether enable strict style.
     # In this style, the tags will be sorted and aligned in the dictionary order,
     # and the tags with the same name will be aligned together.
     # Note: This option will be ignored if 'align' or 'sort' is false.
     # Default: false
-    strict: true
+    # strict: true
 
   tagliatelle:
     # Check the struct tag name case.
     case:
       # Use the struct field name to check the name of the struct tag.
       # Default: false
-      use-field-name: true
+      # use-field-name: true
       # `camel` is used for `json` and `yaml`, and `header` is used for `header` (can be overridden)
       # Default: {}
       rules:
