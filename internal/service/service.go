@@ -12,7 +12,7 @@ type (
 	Service struct {
 		UserService
 		OrderService
-		BallanceService
+		BalanceService
 		l *zap.Logger
 	}
 
@@ -27,19 +27,19 @@ type (
 		CheckNumber(ctx context.Context, number string) error
 	}
 
-	BallanceService interface {
+	BalanceService interface {
 		Get(ctx context.Context, uid int64) (*model.Balance, error)
 		Withdraw(ctx context.Context, uid int64, number string, sum float64) error
 		GetWithdrawals(ctx context.Context, uid int64) (*model.Withdrawals, error)
 	}
 )
 
-func New(userService UserService, orderService OrderService, balanceService BallanceService, log *zap.Logger) *Service {
+func New(userService UserService, orderService OrderService, balanceService BalanceService, log *zap.Logger) *Service {
 	return &Service{
-		UserService:     userService,
-		OrderService:    orderService,
-		BallanceService: balanceService,
-		l:               log,
+		UserService:    userService,
+		OrderService:   orderService,
+		BalanceService: balanceService,
+		l:              log,
 	}
 }
 
@@ -77,7 +77,7 @@ func (s *Service) CheckOrderNumber(ctx context.Context, number string) error {
 
 // Ballance service.
 func (s *Service) GetBalance(ctx context.Context, uid int64) (*model.Balance, error) {
-	b, err := s.BallanceService.Get(ctx, uid)
+	b, err := s.BalanceService.Get(ctx, uid)
 	if err != nil {
 		return nil, err
 	}
@@ -96,13 +96,13 @@ func (s *Service) WithdrawBalance(ctx context.Context, uid int64, number string,
 	}
 
 	// выполнить запрос на списание.
-	err := s.BallanceService.Withdraw(ctx, uid, number, sum)
+	err := s.BalanceService.Withdraw(ctx, uid, number, sum)
 
 	return err
 }
 
 func (s *Service) GetWithdrawalsBalance(ctx context.Context, uid int64) (*model.Withdrawals, error) {
-	withdrawals, err := s.BallanceService.GetWithdrawals(ctx, uid)
+	withdrawals, err := s.BalanceService.GetWithdrawals(ctx, uid)
 
 	return withdrawals, err
 }

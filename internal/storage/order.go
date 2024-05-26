@@ -21,6 +21,13 @@ type (
 
 	DTOOrders []DTOOrder
 
+	DTOAccrualOrder struct {
+		UID    int64  `db:"user_id"`
+		Number string `db:"number"`
+	}
+
+	DTOAccrualOrders []DTOAccrualOrder
+
 	OrderStorage struct {
 		db *sqlx.DB
 		l  *zap.Logger
@@ -76,4 +83,43 @@ func (s *OrderStorage) GetAll(ctx context.Context, uid int64) (*DTOOrders, error
 	}
 
 	return &orders, nil
+}
+
+func (s *OrderStorage) GetToProcessing(ctx context.Context) (*DTOAccrualOrders, error) {
+	queryText := `SELECT user_id, number
+		FROM "order"
+		WHERE status < 3;`
+	orders := DTOAccrualOrders{}
+	err := WithTx(ctx, s.db, func(ctx context.Context, tx *sqlx.Tx) error {
+		if err := tx.SelectContext(ctx, &orders, queryText); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return &orders, errors.Wrap(err, "orderstorage.getall")
+	}
+
+	return &orders, nil
+}
+
+func (s *OrderStorage) Update(ctx context.Context, order DTOOrder) error {
+	err := WithTx(ctx, s.db, func(ctx context.Context, tx *sqlx.Tx) error {
+		queryText := `UPDATE "order"
+			SET status = $2, accrual = $3
+			WHERE number = $1;`
+		if _, err := tx.ExecContext(ctx, queryText, order.Number, order.Status, order.Accrual); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return errors.Wrap(err, "orderstorage.add")
+	}
+
+	return nil
 }

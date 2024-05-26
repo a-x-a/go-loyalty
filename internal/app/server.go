@@ -10,6 +10,8 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
+	accrualclient "github.com/a-x-a/go-loyalty/internal/accrual/client"
+	accrualsyncer "github.com/a-x-a/go-loyalty/internal/accrual/syncer"
 	"github.com/a-x-a/go-loyalty/internal/config"
 	"github.com/a-x-a/go-loyalty/internal/handler"
 	"github.com/a-x-a/go-loyalty/internal/logger"
@@ -25,6 +27,7 @@ type Server struct {
 	e   *echo.Echo
 	h   *handler.Handler
 	l   *zap.Logger
+	s   *accrualsyncer.AccrualSyncer
 	cfg config.ServiceConfig
 }
 
@@ -54,6 +57,10 @@ func NewServer() *Server {
 	balanceStorage := storage.NewBalanceStorage(dbConn, log)
 	balanceService := balanceservice.New(balanceStorage, cfg, log)
 	// Accrual service.
+	// TODO add accrual storage
+	accrualClient := accrualclient.New(cfg.AccrualSystemAddress, log)
+	accrualSyncer := accrualsyncer.New(orderService, balanceService, nil, accrualClient, 15, 5, log)
+
 	s := service.New(userService, orderService, balanceService, log)
 	h := handler.New(s)
 
@@ -61,6 +68,7 @@ func NewServer() *Server {
 		e:   echo.New(),
 		h:   h,
 		l:   log,
+		s:   accrualSyncer,
 		cfg: cfg,
 	}
 }
@@ -83,6 +91,7 @@ func (s *Server) Run(ctx context.Context) error {
 	r.POST("/balance/withdraw", s.h.WithdrawBalance())
 	r.GET("/withdrawals", s.h.WithdrawalsBalance())
 
+	// accrual sync
 	s.l.Info("start http server", zap.String("address", s.cfg.RunAddress))
 
 	if err := s.e.Start(s.cfg.RunAddress); err != http.ErrServerClosed {

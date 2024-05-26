@@ -1,17 +1,14 @@
 package model
 
-import "net/http"
-
 type (
-	HTTPClient interface {
-		Get(reqURL string) (*http.Response, error)
-	}
-
 	AccrualOrder struct {
-		Order   int64   `json:"order,string"`
+		UID     int64   `json:"user_id"`
+		Order   string  `json:"order"`
 		Status  string  `json:"status"`
 		Accrual float64 `json:"accrual"`
 	}
+
+	AccrualOrders []AccrualOrder
 
 	AccrualStatus int
 )
@@ -43,4 +40,14 @@ func (o AccrualOrder) IsValid() bool {
 	}
 
 	return false
+}
+
+func (o AccrualOrder) GetStatusIndex() AccrualStatus {
+	for i, s := range statuses() {
+		if o.Status == s {
+			return AccrualStatus(i)
+		}
+	}
+
+	return AccrualStatus(-1)
 }

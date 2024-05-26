@@ -1,4 +1,4 @@
-package client
+package accrualclient
 
 import (
 	"context"
@@ -18,13 +18,19 @@ import (
 	accrualModel "github.com/a-x-a/go-loyalty/internal/accrual/model"
 )
 
-type AccrualClient struct {
-	URL    string
-	client accrualModel.HTTPClient
-	l      *zap.Logger
+type (
+	HTTPClient interface {
+		Get(reqURL string) (*http.Response, error)
+	}
 
-	isAvailable atomic.Bool
-}
+	AccrualClient struct {
+		URL    string
+		client HTTPClient
+		l      *zap.Logger
+
+		isAvailable atomic.Bool
+	}
+)
 
 func New(address string, l *zap.Logger) *AccrualClient {
 	if !strings.HasPrefix(address, "http") {
@@ -42,9 +48,11 @@ func New(address string, l *zap.Logger) *AccrualClient {
 	return &c
 }
 
-func (c *AccrualClient) Get(ctx context.Context, number string) (*accrualModel.AccrualOrder, error) {
+func (c *AccrualClient) Get(ctx context.Context, number string) (accrualModel.AccrualOrder, error) {
+	var order accrualModel.AccrualOrder
+
 	if !c.isAvailable.Load() {
-		return nil, accrualErr.ErrClientIsNoAvailable
+		return order, accrualErr.ErrClientIsNoAvailable
 	}
 
 	url := fmt.Sprintf("%s/api/orders/%s", c.URL, number)
@@ -54,7 +62,7 @@ func (c *AccrualClient) Get(ctx context.Context, number string) (*accrualModel.A
 	resp, err := c.client.Get(url)
 	if err != nil {
 		c.l.Debug("failed to get responce from accrual system", zap.Error(errors.Wrap(err, "accrualclient.get")))
-		return nil, err
+		return order, err
 	}
 
 	defer resp.Body.Close()
@@ -64,30 +72,33 @@ func (c *AccrualClient) Get(ctx context.Context, number string) (*accrualModel.A
 		data, err := io.ReadAll(resp.Body)
 		if err != nil {
 			c.l.Debug("failed to read responce from accrual system", zap.Error(errors.Wrap(err, "accrualclient.get")))
-			return nil, err
+			return order, err
 		}
 
-		var order accrualModel.AccrualOrder
 		if err := json.Unmarshal(data, &order); err != nil {
 			c.l.Debug("failed to unmarshal responce from accrual system", zap.Error(errors.Wrap(err, "accrualclient.get")))
-			return nil, err
+			return order, err
 		}
 
 		if !order.IsValid() {
 			c.l.Debug("invalid accrual order", zap.Any("order", order))
-			return nil, accrualErr.ErrInvalidAccrualOrder
+			return order, accrualErr.ErrInvalidAccrualOrder
 		}
 
 		c.l.Info("get responce from accrual system", zap.Any("order", order))
-		return &order, nil
+
+		return order, nil
+
 	case http.StatusNoContent:
 		c.l.Info("no content", zap.Int("code", http.StatusNoContent))
-		return nil, accrualErr.ErrNoContent
+
+		return order, accrualErr.ErrNoContent
+
 	case http.StatusTooManyRequests:
 		retryHeader := resp.Header.Get("Retry-After")
 		retryAfter, err := strconv.Atoi(retryHeader)
 		if err != nil {
-			return nil, accrualErr.ErrTooManyRequests
+			return order, accrualErr.ErrTooManyRequests
 		}
 
 		c.l.Info("too many requests", zap.Int("code", http.StatusNoContent), zap.Int("retry-after", retryAfter))
@@ -100,8 +111,8 @@ func (c *AccrualClient) Get(ctx context.Context, number string) (*accrualModel.A
 			c.l.Debug("open client")
 		}(time.Duration(retryAfter) * time.Second)
 
-		return nil, accrualErr.ErrTooManyRequests
+		return order, accrualErr.ErrTooManyRequests
 	}
 
-	return nil, nil
+	return order, nil
 }

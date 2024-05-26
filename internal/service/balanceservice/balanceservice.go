@@ -16,10 +16,10 @@ import (
 type (
 	BalanceStorage interface {
 		Create(ctx context.Context, uid int64) error
-		// Update(ctx context.Context, uid int64) error
 		Get(ctx context.Context, uid int64) (*storage.DTOBalance, error)
 		Withdraw(ctx context.Context, uid int64, number string, sum float64) error
 		GetWithdrawals(ctx context.Context, uid int64) (*storage.DTOWithdrawals, error)
+		Accrual(ctx context.Context, uid int64, sum float64) error
 	}
 
 	BalanceService struct {
@@ -83,4 +83,8 @@ func (s *BalanceService) GetWithdrawals(ctx context.Context, uid int64) (*model.
 	}
 
 	return &withdrawals, nil
+}
+
+func (s *BalanceService) Update(ctx context.Context, uid int64, sum float64) error {
+	return s.storage.Accrual(ctx, uid, sum)
 }

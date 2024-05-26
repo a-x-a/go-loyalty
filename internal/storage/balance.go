@@ -83,7 +83,6 @@ func (s *BalanceStorage) Get(ctx context.Context, uid int64) (*DTOBalance, error
 }
 
 func (s *BalanceStorage) Withdraw(ctx context.Context, uid int64, number string, sum float64) error {
-
 	balance := DTOBalance{}
 
 	err := WithTx(ctx, s.db, func(ctx context.Context, tx *sqlx.Tx) error {
@@ -92,8 +91,12 @@ func (s *BalanceStorage) Withdraw(ctx context.Context, uid int64, number string,
 			(user_id, "order", sum)
 			VALUES($1, $2, $3)`
 
-		_, err := tx.ExecContext(ctx, queryText, uid, number, sum)
+		result, err := tx.ExecContext(ctx, queryText, uid, number, sum)
 		if err != nil {
+			return err
+		}
+
+		if _, err := result.RowsAffected(); err != nil {
 			return err
 		}
 
@@ -106,8 +109,12 @@ func (s *BalanceStorage) Withdraw(ctx context.Context, uid int64, number string,
 			ON CONFLICT (user_id) DO UPDATE
 				SET current = balance.current - $2, withdrawn = balance.withdrawn + $2`
 
-		_, err = tx.ExecContext(ctx, queryText, uid, sum)
+		result, err = tx.ExecContext(ctx, queryText, uid, sum)
 		if err != nil {
+			return err
+		}
+
+		if _, err := result.RowsAffected(); err != nil {
 			return err
 		}
 
@@ -154,4 +161,34 @@ func (s *BalanceStorage) GetWithdrawals(ctx context.Context, uid int64) (*DTOWit
 	}
 
 	return &withdrawals, nil
+}
+
+func (s *BalanceStorage) Accrual(ctx context.Context, uid int64, sum float64) error {
+	queryText := `INSERT INTO "balance"
+		(user_id, current)
+		SELECT b.user_id, b.current+$2
+			FROM "balance" AS b
+			WHERE user_id = $1
+		ON CONFLICT (user_id) DO UPDATE
+			SET current = balance.current + $2`
+
+	err := WithTx(ctx, s.db, func(ctx context.Context, tx *sqlx.Tx) error {
+		// обновим баланс.
+		result, err := tx.ExecContext(ctx, queryText, uid, sum)
+		if err != nil {
+			return err
+		}
+
+		if _, err := result.RowsAffected(); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return errors.Wrap(err, "balancestorage.withdraw")
+	}
+
+	return nil
 }

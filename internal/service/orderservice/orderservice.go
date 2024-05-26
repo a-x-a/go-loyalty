@@ -7,6 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	accrualModel "github.com/a-x-a/go-loyalty/internal/accrual/model"
 	"github.com/a-x-a/go-loyalty/internal/config"
 	"github.com/a-x-a/go-loyalty/internal/customerrors"
 	"github.com/a-x-a/go-loyalty/internal/model"
@@ -17,8 +18,9 @@ import (
 type (
 	OrderStorage interface {
 		Add(ctx context.Context, uid int64, number string) error
-		// Update(ctx context.Context, uid int64) error
 		GetAll(ctx context.Context, uid int64) (*storage.DTOOrders, error)
+		Update(ctx context.Context, order storage.DTOOrder) error
+		GetToProcessing(ctx context.Context) (*storage.DTOAccrualOrders, error)
 	}
 
 	OrderService struct {
@@ -48,7 +50,7 @@ func (s *OrderService) GetAll(ctx context.Context, uid int64) (*model.Orders, er
 		return nil, err
 	}
 
-	s.l.Debug("getall", zap.Any("orders", o))
+	s.l.Debug("get orders", zap.Any("orders", o))
 
 	orders := model.Orders{}
 	for _, v := range *o {
@@ -60,6 +62,7 @@ func (s *OrderService) GetAll(ctx context.Context, uid int64) (*model.Orders, er
 		}
 		orders = append(orders, order)
 	}
+
 	return &orders, nil
 }
 
@@ -69,4 +72,40 @@ func (s *OrderService) CheckNumber(ctx context.Context, number string) error {
 	}
 
 	return customerrors.ErrInvalidOrderNumber
+}
+
+func (s *OrderService) GetOrdersToProcessing(ctx context.Context) (*accrualModel.AccrualOrders, error) {
+	o, err := s.storage.GetToProcessing(ctx)
+	if err != nil {
+		s.l.Debug("get orders error", zap.Error(errors.Wrap(err, "orderservice.getorderstoprocessing")))
+		return nil, err
+	}
+
+	s.l.Debug("get orders", zap.Any("orders", *o))
+
+	orders := accrualModel.AccrualOrders{}
+	for _, v := range *o {
+		order := accrualModel.AccrualOrder{
+			UID:   v.UID,
+			Order: v.Number,
+		}
+		orders = append(orders, order)
+	}
+
+	return &orders, nil
+}
+
+func (s *OrderService) Update(ctx context.Context, number string, status int, accrual float64) error {
+	if err := s.CheckNumber(ctx, number); err != nil {
+		s.l.Debug("upload order error", zap.Error(errors.Wrap(err, "orderservice.update")))
+		return err
+	}
+
+	order := storage.DTOOrder{
+		Number:  number,
+		Status:  status,
+		Accrual: accrual,
+	}
+
+	return s.storage.Update(ctx, order)
 }

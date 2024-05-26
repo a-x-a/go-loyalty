@@ -1,4 +1,4 @@
-package syncer
+package accrualsyncer
 
 import (
 	"context"
@@ -9,6 +9,8 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
+	"github.com/a-x-a/go-loyalty/internal/accrual/customerrors"
+	accrualErr "github.com/a-x-a/go-loyalty/internal/accrual/customerrors"
 	accrualModel "github.com/a-x-a/go-loyalty/internal/accrual/model"
 )
 
@@ -16,7 +18,21 @@ type (
 	AccrualStorage interface{}
 
 	AccrualClient interface {
-		Get(ctx context.Context, number string) (*accrualModel.AccrualOrder, error)
+		Get(ctx context.Context, number string) (accrualModel.AccrualOrder, error)
+	}
+
+	Services struct {
+		Order   OrderService
+		Balance BalanceService
+	}
+
+	OrderService interface {
+		GetOrdersToProcessing(ctx context.Context) (*accrualModel.AccrualOrders, error)
+		Update(ctx context.Context, number string, status int, accrual float64) error
+	}
+
+	BalanceService interface {
+		Update(ctx context.Context, uid int64, accrual float64) error
 	}
 
 	AccrualSyncer struct {
@@ -26,16 +42,25 @@ type (
 
 		frequency        time.Duration
 		accrualRateLimit int
+
+		Services Services
 	}
 )
 
-func New(storage AccrualStorage, client AccrualClient, frequency time.Duration, accrualRateLimit int, l *zap.Logger) *AccrualSyncer {
+func New(orderService OrderService, balanceService BalanceService,
+	storage AccrualStorage, client AccrualClient,
+	frequency time.Duration, accrualRateLimit int, l *zap.Logger) *AccrualSyncer {
 	return &AccrualSyncer{
 		storage:          storage,
 		client:           client,
 		l:                l,
 		frequency:        frequency,
 		accrualRateLimit: accrualRateLimit,
+
+		Services: Services{
+			Order:   orderService,
+			Balance: balanceService,
+		},
 	}
 }
 
@@ -43,25 +68,24 @@ func (s *AccrualSyncer) Start(ctx context.Context) error {
 	timer := time.NewTicker(s.frequency)
 	defer timer.Stop()
 
-	// i := 0
+	var i int
 	for {
 		select {
 		case <-timer.C:
-			// i++
-			// s.l.Info("[JOB|%v] Sync order info", i)
-			ordersToSyncChan, err := s.getOrdersToSync(ctx)
+			i++
+			s.l.Info("processing orders", zap.Int("worker", i))
+			ordersToProcessingChan, err := s.getOrdersToProceessing(ctx)
 			if err != nil {
 				s.l.Debug("failed to get not processed orders", zap.Error(errors.Wrap(err, "accrualsyncer.getorderstosync")))
 				continue
 			}
 
-			responceChan := make(chan accrualModel.AccrualOrder, len(ordersToSyncChan))
+			responceChan := make(chan accrualModel.AccrualOrder, len(ordersToProcessingChan))
 
-			var wg sync.WaitGroup
+			wg := sync.WaitGroup{}
+			wg.Add(s.accrualRateLimit)
 			for w := 1; w <= s.accrualRateLimit; w++ {
-				wg.Add(1)
-				// TODO
-				// s.getAccrualOrdersResp(ctx, &wg, ordersToSyncChan, responceChan)
+				s.getAccrualOrdersResp(ctx, &wg, ordersToProcessingChan, responceChan)
 			}
 
 			go func() {
@@ -71,11 +95,18 @@ func (s *AccrualSyncer) Start(ctx context.Context) error {
 
 			for order := range responceChan {
 				s.l.Debug("get order from responce channel", zap.Any("order", order))
-				// TODO
-				// err = s.updateOrder(ctx, order)
+
+				err = s.updateOrder(ctx, order)
 				if err != nil {
 					s.l.Debug("update order", zap.Error(errors.Wrap(err, "accrualsyncer.updateorder")))
 					continue
+				}
+
+				if order.Accrual != 0 {
+					err = s.updateBalance(ctx, order)
+					if err != nil {
+						s.l.Debug("update balance", zap.Error(errors.Wrap(err, "accrualsyncer.updatebalance")))
+					}
 				}
 			}
 
@@ -85,92 +116,60 @@ func (s *AccrualSyncer) Start(ctx context.Context) error {
 	}
 }
 
-func (s *AccrualSyncer) getOrdersToSync(ctx context.Context) (chan accrualModel.AccrualOrder, error) {
-	// TODO
-	// 	tx, err := s.storage.OpenTransaction(ctx)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("failed to open transaction, %w", err)
-	// 	}
-	// 	defer func() {
-	// 		_ = j.repo.Commit(ctx, tx)
-	// 	}()
+func (s *AccrualSyncer) getOrdersToProceessing(ctx context.Context) (chan accrualModel.AccrualOrder, error) {
+	ordersToProceessing, err := s.Services.Order.GetOrdersToProcessing(ctx)
+	if err != nil {
+		s.l.Debug("failed to get not porocessing orders",
+			zap.Error(errors.Wrap(err, "accrualservice.getorderstoproceed")))
 
-	// 	ordersToSync, err := j.repo.GetNotProcessedOrders(ctx, tx)
-	// 	if len(ordersToSync) == 0 {
-	// 		return nil, accrualErr.ErrNotFoundOrders
-	// 	}
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("failed to get not porocessed orders from db: %w", err)
-	// 	}
-	ordersToSyncChan := make(chan accrualModel.AccrualOrder)
-	// ordersToSyncChan := make(chan models.Order, len(ordersToSync))
+		return nil, err
+	}
 
-	// 	go func() {
-	// 		defer close(ordersToSyncCh)
+	if len(*ordersToProceessing) == 0 {
+		return nil, accrualErr.ErrNotFoundOrders
+	}
 
-	// 		for i := 0; i < len(ordersToSync); i++ {
-	// 			j.logger.Debug("get order to sync", ordersToSync[i].ID)
-	// 			ordersToSyncCh <- ordersToSync[i]
-	// 		}
-	// 	}()
-	return ordersToSyncChan, nil
+	ordersToProcessingChan := make(chan accrualModel.AccrualOrder, len(*ordersToProceessing))
+
+	go func() {
+		defer close(ordersToProcessingChan)
+
+		for _, v := range *ordersToProceessing {
+			s.l.Debug("order to proceed", zap.String("order", v.Order))
+			ordersToProcessingChan <- v
+		}
+	}()
+
+	return ordersToProcessingChan, nil
 }
 
-// func (s *AccrualSyncer) getAccrualOrdersResp(
-// 	ctx context.Context,
-// 	wg *sync.WaitGroup,
-// 	ordersToSync chan models.Order,
-// 	responceChan chan accrualModel.AccrualOrder) {
-// 	go func() {
-// 		defer wg.Done()
+func (s *AccrualSyncer) getAccrualOrdersResp(ctx context.Context, wg *sync.WaitGroup,
+	ordersToProcessingChan chan accrualModel.AccrualOrder, responceChan chan accrualModel.AccrualOrder) {
+	go func() {
+		defer wg.Done()
 
-// 		for orderToSync := range ordersToSync {
-// 			order, err := s.client.Get(ctx, orderToSync.ID)
-// 			if err != nil {
-// 				s.l.Debug("fail to get order", zap.Error(errors.Wrap(err, "accrualsyncer.client.get")))
-// 				continue
-// 			}
+		for orderToProcessing := range ordersToProcessingChan {
+			order, err := s.client.Get(ctx, orderToProcessing.Order)
+			if err != nil {
+				s.l.Debug("fail to get order", zap.Error(errors.Wrap(err, "accrualsyncer.client.get")))
+				continue
+			}
 
-// 			responceChan <- *order
-// 		}
-// 	}()
-// }
+			responceChan <- order
+		}
+	}()
+}
 
-// func (s *AccrualSyncer) updateOrder(ctx context.Context, order accrualModel.AccrualOrder) error {
-// 	// TODO
-// 	tx, err := j.repo.OpenTransaction(ctx)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to open transaction, %w", err)
-// 	}
+func (s *AccrualSyncer) updateOrder(ctx context.Context, order accrualModel.AccrualOrder) error {
+	status := order.GetStatusIndex()
+	if status < 1 {
+		return customerrors.ErrInvalidAccrualOrder
+	}
 
-// 	order, err := j.repo.GetOrder(ctx, tx, order.OrderID, true) // for_update
-// 	if err != nil {
-// 		_ = j.repo.Rollback(ctx, tx)
-// 		return fmt.Errorf("failed to get order for update, %w", err)
-// 	}
+	return s.Services.Order.Update(ctx, order.Order, status.Index(), order.Accrual)
+}
 
-// 	user, err := j.repo.GetUserByID(ctx, tx, order.UserID, true) // for_update
-// 	if err != nil {
-// 		_ = j.repo.Rollback(ctx, tx)
-// 		return fmt.Errorf("failed to get order for update, %w", err)
-// 	}
-// 	if accrualOrder.Status == accrualModels.REGISTERED.String() {
-// 		accrualOrder.Status = models.NEW.String()
-// 	}
-// 	if err = j.repo.UpdateOrder(ctx, tx, order.ID, accrualOrder.Accrual, accrualOrder.Status); err != nil {
-// 		_ = j.repo.Rollback(ctx, tx)
-// 		return fmt.Errorf("failed to update order, %w", err)
-// 	}
-// 	if accrualOrder.Accrual != 0 {
-// 		if err = j.repo.UpdateUserBalance(ctx, tx, user.ID, user.Balance+accrualOrder.Accrual, user.Withdrawn); err != nil {
-// 			_ = j.repo.Rollback(ctx, tx)
-// 			return fmt.Errorf("failed to update user balance, %w", err)
-// 		}
-// 	}
-
-// 	if err = j.repo.Commit(ctx, tx); err != nil {
-// 		return fmt.Errorf("failef to commit, %w", err)
-// 	}
-
-// 	return nil
-// }
+func (s *AccrualSyncer) updateBalance(ctx context.Context, order accrualModel.AccrualOrder) error {
+	// TODO добавить данные в очередь
+	return s.Services.Balance.Update(ctx, order.UID, order.Accrual)
+}
