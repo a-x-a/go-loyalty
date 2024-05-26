@@ -17,7 +17,7 @@ func NewToken(id int64, secret string) (string, error) {
 	claims := &JWTCustomClaims{
 		id,
 		jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 1)),
 		},
 	}
 

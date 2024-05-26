@@ -39,7 +39,7 @@ func NewServer() *Server {
 
 	cfg := config.NewServiceConfig()
 	if len(cfg.AccrualSystemAddress) == 0 {
-		log.Panic("not defined accrual system address")
+		log.Warn("not defined accrual system address", zap.String("address", cfg.AccrualSystemAddress))
 	}
 
 	dbConn, err := storage.NewConnection(cfg.DatabaseURI, "postgres")
