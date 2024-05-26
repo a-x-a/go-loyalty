@@ -15,7 +15,7 @@ type (
 		DatabaseURI string `env:"DATABASE_URI"`
 		// AccrualSystemAddress - адрес системы расчёта начислений.
 		AccrualSystemAddress string `env:"ACCRUEAL_SYSTEM_ADDRESS"`
-		// Secret - секретная фраза
+		// Secret - секретная фраза.
 		Secret string
 	}
 )

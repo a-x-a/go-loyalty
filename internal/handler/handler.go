@@ -11,13 +11,13 @@ import (
 
 type (
 	APIService interface {
-		// UserService
+		// UserService.
 		RegisterUser(ctx context.Context, login, password string) (string, error)
 		Login(ctx context.Context, login, password string) (string, error)
-		// OrderService
+		// OrderService.
 		UploadOrder(ctx context.Context, uid int64, number string) error
 		GetAllOrders(ctx context.Context, uid int64) (*model.Orders, error)
-		// BallanceService
+		// BallanceService.
 		GetBalance(ctx context.Context, uid int64) (*model.Balance, error)
 		WithdrawBalance(ctx context.Context, uid int64, number string, sum float64) error
 		GetWithdrawalsBalance(ctx context.Context, uid int64) (*model.Withdrawals, error)
@@ -34,7 +34,7 @@ func New(s APIService) *Handler {
 	}
 }
 
-func responseWithError(c echo.Context, code int, err error) error {
+func responseWithError(c echo.Context, code int, _ error) error {
 	// resp := fmt.Sprintf("%d: %s", code, err.Error())
 	// return c.JSON(code, err)
 	return c.NoContent(code)

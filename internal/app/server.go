@@ -61,7 +61,6 @@ func NewServer() *Server {
 	balanceStorage := storage.NewBalanceStorage(dbConn, log)
 	balanceService := balanceservice.New(balanceStorage, cfg, log)
 
-	// TODO add accrual storage
 	accrualClient := accrualclient.New(cfg.AccrualSystemAddress, log)
 	accrualSyncer := accrualsyncer.New(orderService, balanceService, nil, accrualClient, time.Second*15, 5, log)
 
@@ -91,17 +90,16 @@ func (s *Server) Run(ctx context.Context) error {
 	s.e.POST("/api/user/login", s.h.Login())
 
 	config := util.NewJWTConfig(s.cfg.Secret)
-	r := s.e.Group("/api/user") // Authorized user only
+	r := s.e.Group("/api/user")
 	r.Use(echojwt.WithConfig(config))
-	// Orders.
+
 	r.POST("/orders", s.h.UploadOrder())
 	r.GET("/orders", s.h.GetAllOrders())
-	// Ballance.
+
 	r.GET("/balance", s.h.GetBalance())
 	r.POST("/balance/withdraw", s.h.WithdrawBalance())
 	r.GET("/withdrawals", s.h.WithdrawalsBalance())
 
-	// accrual sync
 	s.l.Info("start http server", zap.String("address", s.cfg.RunAddress))
 
 	if err := s.e.Start(s.cfg.RunAddress); err != http.ErrServerClosed {

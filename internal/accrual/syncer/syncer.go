@@ -169,6 +169,5 @@ func (s *AccrualSyncer) updateOrder(ctx context.Context, order accrualModel.Accr
 }
 
 func (s *AccrualSyncer) updateBalance(ctx context.Context, order accrualModel.AccrualOrder) error {
-	// TODO добавить данные в очередь
 	return s.Services.Balance.Update(ctx, order.UID, order.Accrual)
 }

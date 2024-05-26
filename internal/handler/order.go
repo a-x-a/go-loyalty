@@ -52,7 +52,7 @@ func (h *Handler) UploadOrder() echo.HandlerFunc {
 	return fn
 }
 
-// Получение списка загруженных номеров заказов
+// Получение списка загруженных номеров заказов.
 func (h *Handler) GetAllOrders() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
 		uid, err := getUserID(c)

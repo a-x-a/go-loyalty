@@ -10,7 +10,7 @@ import (
 	"github.com/a-x-a/go-loyalty/internal/customerrors"
 )
 
-// Получение текущего баланса пользователя
+// Получение текущего баланса пользователя.
 func (h *Handler) GetBalance() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
 		uid, err := getUserID(c)
@@ -37,7 +37,7 @@ type withdrawRequwst struct {
 	Sum   float64 `json:"sum" validate:"required"`
 }
 
-// Запрос на списание средств
+// Запрос на списание средств.
 func (h *Handler) WithdrawBalance() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
 		uid, err := getUserID(c)
@@ -71,7 +71,7 @@ func (h *Handler) WithdrawBalance() echo.HandlerFunc {
 	return fn
 }
 
-// Получение информации о выводе средств
+// Получение информации о выводе средств.
 func (h *Handler) WithdrawalsBalance() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
 		uid, err := getUserID(c)

@@ -56,14 +56,14 @@ func (s *OrderStorage) Add(ctx context.Context, uid int64, number string) error 
 			return err
 		}
 
-		return nil // OrderInProcess
+		return nil
 	})
 
 	if err != nil {
 		return errors.Wrap(err, "orderstorage.add")
 	}
 
-	return nil // OrderInProcess
+	return nil
 }
 
 func (s *OrderStorage) GetAll(ctx context.Context, uid int64) (*DTOOrders, error) {
