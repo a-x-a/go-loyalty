@@ -45,7 +45,7 @@ func responseWithCode(c echo.Context, code int) error {
 	return c.NoContent(code)
 }
 
-func getUserId(c echo.Context) (int64, error) {
+func getUserID(c echo.Context) (int64, error) {
 	uid, ok := c.Get("uid").(int64)
 	if !ok {
 		return 0, errors.New("user id is not defined")
