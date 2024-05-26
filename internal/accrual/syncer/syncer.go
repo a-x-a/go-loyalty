@@ -154,6 +154,8 @@ func (s *AccrualSyncer) getAccrualOrdersResp(ctx context.Context, wg *sync.WaitG
 				continue
 			}
 
+			order.UID = orderToProcessing.UID
+
 			responceChan <- order
 		}
 	}()
