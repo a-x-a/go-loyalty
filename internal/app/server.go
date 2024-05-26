@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"net/http"
+	"time"
 
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
@@ -37,6 +38,9 @@ func NewServer() *Server {
 	defer log.Sync()
 
 	cfg := config.NewServiceConfig()
+	if len(cfg.AccrualSystemAddress) == 0 {
+		log.Panic("not defined accrual system address")
+	}
 
 	dbConn, err := storage.NewConnection(cfg.DatabaseURI, "postgres")
 	if err != nil {
@@ -56,10 +60,10 @@ func NewServer() *Server {
 	// Ballance service.
 	balanceStorage := storage.NewBalanceStorage(dbConn, log)
 	balanceService := balanceservice.New(balanceStorage, cfg, log)
-	// Accrual service.
+
 	// TODO add accrual storage
 	accrualClient := accrualclient.New(cfg.AccrualSystemAddress, log)
-	accrualSyncer := accrualsyncer.New(orderService, balanceService, nil, accrualClient, 15, 5, log)
+	accrualSyncer := accrualsyncer.New(orderService, balanceService, nil, accrualClient, time.Second*15, 5, log)
 
 	s := service.New(userService, orderService, balanceService, log)
 	h := handler.New(s)
@@ -74,6 +78,12 @@ func NewServer() *Server {
 }
 
 func (s *Server) Run(ctx context.Context) error {
+	go func() {
+		if err := s.s.Start(ctx); err != nil {
+			s.l.Panic("failed to start accrual sycronization", zap.Error(errors.Wrap(err, "syncer.start")))
+		}
+	}()
+
 	s.e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Level: 5,
 	}))
@@ -95,7 +105,7 @@ func (s *Server) Run(ctx context.Context) error {
 	s.l.Info("start http server", zap.String("address", s.cfg.RunAddress))
 
 	if err := s.e.Start(s.cfg.RunAddress); err != http.ErrServerClosed {
-		s.l.Warn("failed to start http server", zap.Error(errors.Wrap(err, "echo.start")))
+		s.l.Panic("failed to start http server", zap.Error(errors.Wrap(err, "echo.start")))
 	}
 
 	return nil
