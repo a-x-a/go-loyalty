@@ -14,7 +14,7 @@ import (
 // Загрузка номера заказа.
 func (h *Handler) UploadOrder() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
-		uid, err := getUserId(c)
+		uid, err := getUserID(c)
 		if err != nil {
 			return err
 		}
@@ -55,7 +55,7 @@ func (h *Handler) UploadOrder() echo.HandlerFunc {
 // Получение списка загруженных номеров заказов
 func (h *Handler) GetAllOrders() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
-		uid, err := getUserId(c)
+		uid, err := getUserID(c)
 		if err != nil {
 			return err
 		}

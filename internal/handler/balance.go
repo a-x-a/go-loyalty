@@ -13,7 +13,7 @@ import (
 // Получение текущего баланса пользователя
 func (h *Handler) GetBalance() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
-		uid, err := getUserId(c)
+		uid, err := getUserID(c)
 		if err != nil {
 			return err
 		}
@@ -40,7 +40,7 @@ type withdrawRequwst struct {
 // Запрос на списание средств
 func (h *Handler) WithdrawBalance() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
-		uid, err := getUserId(c)
+		uid, err := getUserID(c)
 		if err != nil {
 			return err
 		}
@@ -74,7 +74,7 @@ func (h *Handler) WithdrawBalance() echo.HandlerFunc {
 // Получение информации о выводе средств
 func (h *Handler) WithdrawalsBalance() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
-		uid, err := getUserId(c)
+		uid, err := getUserID(c)
 		if err != nil {
 			return err
 		}
