@@ -80,7 +80,7 @@ func (s *AuthService) Login(ctx context.Context, login, password string) (string
 	}
 
 	// Сгенерировать JWT.
-	token, err := util.NewToken(user.ID, s.cfg.Secret)
+	token, err := util.NewToken(user.ID, s.cfg.Secret, s.cfg.TokenTTL)
 	if err != nil {
 		s.l.Debug("failed to generate JWT", zap.Error(errors.Wrap(err, "util.newtoken")))
 		return "", err

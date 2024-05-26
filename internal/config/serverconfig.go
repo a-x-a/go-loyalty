@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"fmt"
+	"time"
 
 	"github.com/caarlos0/env"
 )
@@ -17,6 +18,12 @@ type (
 		AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS"`
 		// Secret - секретная фраза.
 		Secret string
+		// TokenTTL - время жизни JWT.
+		TokenTTL time.Duration
+		// AccrualFrequency - частота запросов к системе рассчета баллов.
+		AccrualFrequency time.Duration
+		// AccrualRateLimit - ограничение колличества запросов к системе рассчета баллов.
+		AccrualRateLimit int
 	}
 )
 
@@ -25,6 +32,10 @@ func NewServiceConfig() ServiceConfig {
 		RunAddress:           "localhost:8080",
 		DatabaseURI:          "",
 		AccrualSystemAddress: "",
+		Secret:               "secret",
+		TokenTTL:             time.Hour * time.Duration(24),
+		AccrualFrequency:     time.Second * time.Duration(15),
+		AccrualRateLimit:     5,
 	}
 
 	flag.Usage = func() {

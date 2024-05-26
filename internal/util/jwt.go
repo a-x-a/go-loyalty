@@ -13,11 +13,11 @@ type JWTCustomClaims struct {
 	jwt.RegisteredClaims
 }
 
-func NewToken(id int64, secret string) (string, error) {
+func NewToken(id int64, secret string, tokenTTL time.Duration) (string, error) {
 	claims := &JWTCustomClaims{
 		id,
 		jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 1)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(tokenTTL)),
 		},
 	}
 

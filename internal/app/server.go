@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"net/http"
-	"time"
 
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
@@ -62,7 +61,7 @@ func NewServer() *Server {
 	balanceService := balanceservice.New(balanceStorage, cfg, log)
 
 	accrualClient := accrualclient.New(cfg.AccrualSystemAddress, log)
-	accrualSyncer := accrualsyncer.New(orderService, balanceService, nil, accrualClient, time.Second*15, 5, log)
+	accrualSyncer := accrualsyncer.New(orderService, balanceService, nil, accrualClient, cfg.AccrualFrequency, cfg.AccrualRateLimit, log)
 
 	s := service.New(userService, orderService, balanceService, log)
 	h := handler.New(s)
