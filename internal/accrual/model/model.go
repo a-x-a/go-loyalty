@@ -2,10 +2,10 @@ package model
 
 type (
 	AccrualOrder struct {
-		UID     int64   `json:"user_id"`
-		Order   string  `json:"order"`
-		Status  string  `json:"status"`
-		Accrual float64 `json:"accrual"`
+		UID     int64   `json:"user_id" db:"user_id"`
+		Order   string  `json:"order" db:"number"`
+		Status  string  `json:"status" db:"status"`
+		Accrual float64 `json:"accrual" db:"accrual"`
 	}
 
 	AccrualOrders []AccrualOrder
