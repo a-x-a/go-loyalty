@@ -394,3 +394,63 @@ linters-settings:
       - name: unexported-return
         severity: warning
         disabled: true
+
+  tagalign:
+    # Align and sort can be used together or separately.
+    #
+    # Whether enable align. If true, the struct tags will be aligned.
+    # e.g.:
+    # type FooBar struct {
+    #     Bar    string `json:"bar" validate:"required"`
+    #     FooFoo int8   `json:"foo_foo" validate:"required"`
+    # }
+    # will be formatted to:
+    # type FooBar struct {
+    #     Bar    string `json:"bar"     validate:"required"`
+    #     FooFoo int8   `json:"foo_foo" validate:"required"`
+    # }
+    # Default: true.
+    align: false
+    # Whether enable tags sort.
+    # If true, the tags will be sorted by name in ascending order.
+    # e.g.: `xml:"bar" json:"bar" validate:"required"` -> `json:"bar" validate:"required" xml:"bar"`
+    # Default: true
+    sort: false
+    # Specify the order of tags, the other tags will be sorted by name.
+    # This option will be ignored if `sort` is false.
+    # Default: []
+    order:
+      - json
+      - yaml
+      - yml
+      - toml
+      - mapstructure
+      - binding
+      - validate
+    # Whether enable strict style.
+    # In this style, the tags will be sorted and aligned in the dictionary order,
+    # and the tags with the same name will be aligned together.
+    # Note: This option will be ignored if 'align' or 'sort' is false.
+    # Default: false
+    strict: true
+
+  tagliatelle:
+    # Check the struct tag name case.
+    case:
+      # Use the struct field name to check the name of the struct tag.
+      # Default: false
+      use-field-name: true
+      # `camel` is used for `json` and `yaml`, and `header` is used for `header` (can be overridden)
+      # Default: {}
+      rules:
+        # Any struct tag type can be used.
+        # Support string case: `camel`, `pascal`, `kebab`, `snake`, `upperSnake`, `goCamel`, `goPascal`, `goKebab`, `goSnake`, `upper`, `lower`, `header`
+        json: snake
+        # yaml: camel
+        # xml: camel
+        # toml: camel
+        # bson: camel
+        # avro: snake
+        # mapstructure: kebab
+        # env: upperSnake
+        # envconfig: upperSnake

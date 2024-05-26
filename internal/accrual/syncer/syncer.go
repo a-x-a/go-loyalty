@@ -93,7 +93,7 @@ func (s *AccrualSyncer) Start(ctx context.Context) error {
 			}()
 
 			for order := range responceChan {
-				s.l.Debug("get order from responce channel", zap.Any("order", order))
+				s.l.Debug("get order from response channel", zap.Any("order", order))
 
 				err = s.updateOrder(ctx, order)
 				if err != nil {

@@ -61,7 +61,7 @@ func (c *AccrualClient) Get(ctx context.Context, number string) (accrualModel.Ac
 
 	resp, err := c.client.Get(url)
 	if err != nil {
-		c.l.Debug("failed to get responce from accrual system", zap.Error(errors.Wrap(err, "accrualclient.get")))
+		c.l.Debug("failed to get response from accrual system", zap.Error(errors.Wrap(err, "accrualclient.get")))
 		return order, err
 	}
 
@@ -71,12 +71,12 @@ func (c *AccrualClient) Get(ctx context.Context, number string) (accrualModel.Ac
 	case http.StatusOK:
 		data, err := io.ReadAll(resp.Body)
 		if err != nil {
-			c.l.Debug("failed to read responce from accrual system", zap.Error(errors.Wrap(err, "accrualclient.get")))
+			c.l.Debug("failed to read response from accrual system", zap.Error(errors.Wrap(err, "accrualclient.get")))
 			return order, err
 		}
 
 		if err := json.Unmarshal(data, &order); err != nil {
-			c.l.Debug("failed to unmarshal responce from accrual system", zap.Error(errors.Wrap(err, "accrualclient.get")))
+			c.l.Debug("failed to unmarshal response from accrual system", zap.Error(errors.Wrap(err, "accrualclient.get")))
 			return order, err
 		}
 
@@ -85,7 +85,7 @@ func (c *AccrualClient) Get(ctx context.Context, number string) (accrualModel.Ac
 			return order, accrualErr.ErrInvalidAccrualOrder
 		}
 
-		c.l.Info("get responce from accrual system", zap.Any("order", order))
+		c.l.Info("get response from accrual system", zap.Any("order", order))
 
 		return order, nil
 

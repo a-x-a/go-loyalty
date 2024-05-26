@@ -54,7 +54,7 @@ func (s *AuthService) Register(ctx context.Context, login, password string) erro
 		return customerrors.ErrUsernameAlreadyTaken
 	}
 
-	s.l.Info("user created", zap.String("succesful", "authservice.register"))
+	s.l.Info("user created", zap.String("successful", "authservice.register"))
 
 	return nil
 }
@@ -86,7 +86,7 @@ func (s *AuthService) Login(ctx context.Context, login, password string) (string
 		return "", err
 	}
 
-	s.l.Info("login user", zap.String("succesful", "authservice.login"))
+	s.l.Info("login user", zap.String("successful", "authservice.login"))
 
 	return token, nil
 }

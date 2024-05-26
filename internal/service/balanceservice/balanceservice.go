@@ -49,7 +49,6 @@ func (s *BalanceService) Get(ctx context.Context, uid int64) (*model.Balance, er
 }
 
 func (s *BalanceService) Withdraw(ctx context.Context, uid int64, number string, sum float64) error {
-
 	err := s.storage.Withdraw(ctx, uid, number, sum)
 	if err != nil {
 		s.l.Debug("withdraw error", zap.Error(errors.Wrap(err, "balanceservice.withdraw")))
