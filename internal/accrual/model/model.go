@@ -1,6 +1,20 @@
-package accrualclient
+package model
 
-type AccrualStatus int
+import "net/http"
+
+type (
+	HTTPClient interface {
+		Get(reqURL string) (*http.Response, error)
+	}
+
+	AccrualOrder struct {
+		Order   int64   `json:"order,string"`
+		Status  string  `json:"status"`
+		Accrual float64 `json:"accrual"`
+	}
+
+	AccrualStatus int
+)
 
 const (
 	REGISTERED AccrualStatus = iota + 1
@@ -19,12 +33,6 @@ func (s AccrualStatus) String() string {
 
 func (s AccrualStatus) Index() int {
 	return int(s)
-}
-
-type AccrualOrder struct {
-	Order   int64   `json:"order,string"`
-	Status  string  `json:"status"`
-	Accrual float64 `json:"accrual"`
 }
 
 func (o AccrualOrder) IsValid() bool {

@@ -1,4 +1,4 @@
-package accrualclient
+package client
 
 import (
 	"context"
@@ -14,12 +14,12 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/a-x-a/go-loyalty/internal/client"
+	accrualModel "github.com/a-x-a/go-loyalty/internal/accrual/model"
 )
 
 type AccrualClient struct {
 	URL    string
-	client client.HTTPClient
+	client accrualModel.HTTPClient
 	l      *zap.Logger
 
 	isAvailable atomic.Bool
@@ -41,7 +41,7 @@ func New(address string, l *zap.Logger) *AccrualClient {
 	return &c
 }
 
-func (c *AccrualClient) Get(ctx context.Context, number string) (*AccrualOrder, error) {
+func (c *AccrualClient) Get(ctx context.Context, number string) (*accrualModel.AccrualOrder, error) {
 	if !c.isAvailable.Load() {
 		return nil, ErrClientIsNoAvailable
 	}
@@ -66,7 +66,7 @@ func (c *AccrualClient) Get(ctx context.Context, number string) (*AccrualOrder, 
 			return nil, err
 		}
 
-		var order AccrualOrder
+		var order accrualModel.AccrualOrder
 		if err := json.Unmarshal(data, &order); err != nil {
 			c.l.Debug("failed to unmarshal responce from accrual system", zap.Error(errors.Wrap(err, "accrualclient.get")))
 			return nil, err
