@@ -9,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/a-x-a/go-loyalty/internal/accrual/customerrors"
 	accrualErr "github.com/a-x-a/go-loyalty/internal/accrual/customerrors"
 	accrualModel "github.com/a-x-a/go-loyalty/internal/accrual/model"
 )
@@ -163,7 +162,7 @@ func (s *AccrualSyncer) getAccrualOrdersResp(ctx context.Context, wg *sync.WaitG
 func (s *AccrualSyncer) updateOrder(ctx context.Context, order accrualModel.AccrualOrder) error {
 	status := order.GetStatusIndex()
 	if status < 1 {
-		return customerrors.ErrInvalidAccrualOrder
+		return accrualErr.ErrInvalidAccrualOrder
 	}
 
 	return s.Services.Order.Update(ctx, order.Order, status.Index(), order.Accrual)
