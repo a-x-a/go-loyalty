@@ -1,4 +1,4 @@
-package accrualsyncer
+package syncer
 
 import (
 	"context"
