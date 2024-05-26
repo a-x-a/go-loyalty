@@ -14,6 +14,7 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
+	accrualErr "github.com/a-x-a/go-loyalty/internal/accrual/customerrors"
 	accrualModel "github.com/a-x-a/go-loyalty/internal/accrual/model"
 )
 
@@ -43,7 +44,7 @@ func New(address string, l *zap.Logger) *AccrualClient {
 
 func (c *AccrualClient) Get(ctx context.Context, number string) (*accrualModel.AccrualOrder, error) {
 	if !c.isAvailable.Load() {
-		return nil, ErrClientIsNoAvailable
+		return nil, accrualErr.ErrClientIsNoAvailable
 	}
 
 	url := fmt.Sprintf("%s/api/orders/%s", c.URL, number)
@@ -74,19 +75,19 @@ func (c *AccrualClient) Get(ctx context.Context, number string) (*accrualModel.A
 
 		if !order.IsValid() {
 			c.l.Debug("invalid accrual order", zap.Any("order", order))
-			return nil, ErrInvalidAccrualOrder
+			return nil, accrualErr.ErrInvalidAccrualOrder
 		}
 
 		c.l.Info("get responce from accrual system", zap.Any("order", order))
 		return &order, nil
 	case http.StatusNoContent:
 		c.l.Info("no content", zap.Int("code", http.StatusNoContent))
-		return nil, ErrNoContent
+		return nil, accrualErr.ErrNoContent
 	case http.StatusTooManyRequests:
 		retryHeader := resp.Header.Get("Retry-After")
 		retryAfter, err := strconv.Atoi(retryHeader)
 		if err != nil {
-			return nil, ErrTooManyRequests
+			return nil, accrualErr.ErrTooManyRequests
 		}
 
 		c.l.Info("too many requests", zap.Int("code", http.StatusNoContent), zap.Int("retry-after", retryAfter))
@@ -99,7 +100,7 @@ func (c *AccrualClient) Get(ctx context.Context, number string) (*accrualModel.A
 			c.l.Debug("open client")
 		}(time.Duration(retryAfter) * time.Second)
 
-		return nil, ErrTooManyRequests
+		return nil, accrualErr.ErrTooManyRequests
 	}
 
 	return nil, nil
