@@ -10,8 +10,6 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	accrualclient "github.com/a-x-a/go-loyalty/internal/accrual/client"
-	accrualsyncer "github.com/a-x-a/go-loyalty/internal/accrual/syncer"
 	"github.com/a-x-a/go-loyalty/internal/config"
 	"github.com/a-x-a/go-loyalty/internal/handler"
 	"github.com/a-x-a/go-loyalty/internal/logger"
