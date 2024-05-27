@@ -50,7 +50,6 @@ type (
 func New(orderService OrderService, balanceService BalanceService,
 	storage AccrualStorage, accrualSystemAddress string,
 	frequency time.Duration, accrualRateLimit int, l *zap.Logger) *AccrualWorker {
-
 	accrualClient := client.New(accrualSystemAddress, l)
 
 	return &AccrualWorker{
