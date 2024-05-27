@@ -4,7 +4,7 @@ import "time"
 
 type (
 	Balance struct {
-		Current   float64 `json:"current"`
+		Current   float64 `json:"current,omitempty"`
 		Withdrawn float64 `json:"withdrawn,omitempty"`
 	}
 

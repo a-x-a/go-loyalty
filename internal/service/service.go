@@ -17,7 +17,7 @@ type (
 	}
 
 	UserService interface {
-		Register(ctx context.Context, login, password string) error
+		Register(ctx context.Context, login, password string) (int64, error)
 		Login(ctx context.Context, login, password string) (string, error)
 	}
 
@@ -28,6 +28,7 @@ type (
 	}
 
 	BalanceService interface {
+		Create(ctx context.Context, uid int64) error
 		Get(ctx context.Context, uid int64) (*model.Balance, error)
 		Withdraw(ctx context.Context, uid int64, number string, sum float64) error
 		GetWithdrawals(ctx context.Context, uid int64) (*model.Withdrawals, error)
@@ -45,9 +46,15 @@ func New(userService UserService, orderService OrderService, balanceService Bala
 
 // Auth service.
 func (s *Service) RegisterUser(ctx context.Context, login, password string) (string, error) {
-	err := s.UserService.Register(ctx, login, password)
+	uid, err := s.UserService.Register(ctx, login, password)
 	if err != nil {
 		return "", err
+	}
+
+	if uid > 0 {
+		if err := s.BalanceService.Create(ctx, uid); err != nil {
+			return "", err
+		}
 	}
 
 	return s.UserService.Login(ctx, login, password)

@@ -37,7 +37,7 @@ func NewBalanceStorage(db *sqlx.DB, l *zap.Logger) *BalanceStorage {
 }
 
 func (s *BalanceStorage) Create(ctx context.Context, uid int64) error {
-	queryText := `INSERT INTO "balance"(uid) VALUES ($1);`
+	queryText := `INSERT INTO "balance"(user_id) VALUES ($1);`
 
 	err := WithTx(ctx, s.db, func(ctx context.Context, tx *sqlx.Tx) error {
 		result, err := tx.ExecContext(ctx, queryText, uid)

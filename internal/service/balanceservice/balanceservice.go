@@ -33,6 +33,18 @@ func New(storage BalanceStorage, cfg config.ServiceConfig, l *zap.Logger) *Balan
 	return &BalanceService{storage, cfg, l}
 }
 
+func (s *BalanceService) Create(ctx context.Context, uid int64) error {
+	s.l.Debug("create user ballance", zap.Int64("uid", uid))
+
+	err := s.storage.Create(ctx, uid)
+	if err != nil {
+		s.l.Debug("failed to create user ballance", zap.Error(errors.Wrap(err, "storage.create")))
+		return err
+	}
+
+	return err
+}
+
 func (s *BalanceService) Get(ctx context.Context, uid int64) (*model.Balance, error) {
 	b, err := s.storage.Get(ctx, uid)
 	if err != nil {

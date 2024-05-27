@@ -17,7 +17,7 @@ import (
 
 type (
 	UserStorage interface {
-		Add(ctx context.Context, login, pwdHash string) error
+		Add(ctx context.Context, login, pwdHash string) (int64, error)
 		Get(ctx context.Context, login string) (*storage.DTOUser, error)
 	}
 
@@ -33,30 +33,33 @@ func New(storage UserStorage, cfg config.ServiceConfig, l *zap.Logger) *AuthServ
 }
 
 // Регистрация нового пользователя.
-func (s *AuthService) Register(ctx context.Context, login, password string) error {
+func (s *AuthService) Register(ctx context.Context, login, password string) (int64, error) {
 	_, err := model.NewUser(login, password)
 	if err != nil {
 		s.l.Debug("failed to create user", zap.Error(errors.Wrap(err, "model.newuser")))
-		return customerrors.ErrInvalidRequestFormat
+		return -1, customerrors.ErrInvalidRequestFormat
 	}
 
 	// Генерируем хэш пароля.
 	pwdHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		s.l.Debug("failed to generate hash of password", zap.Error(errors.Wrap(err, "bcrypt.generatefrompassword")))
-		return err
+		return -1, err
 	}
 
 	// Сохраняем пользователя в БД.
-	err = s.storage.Add(ctx, login, string(pwdHash))
+	uid, err := s.storage.Add(ctx, login, string(pwdHash))
+
+	s.l.Debug("add new user with ballance", zap.Int64("uid", uid))
+
 	if err != nil {
 		s.l.Debug("failed to add user", zap.Error(errors.Wrap(err, "storage.adduser")))
-		return customerrors.ErrUsernameAlreadyTaken
+		return -1, customerrors.ErrUsernameAlreadyTaken
 	}
 
 	s.l.Info("user created", zap.String("successful", "authservice.register"))
 
-	return nil
+	return uid, nil
 }
 
 // Авторизация пользователя.

@@ -25,14 +25,23 @@ func NewUserStorage(db *sqlx.DB, l *zap.Logger) *UserStorage {
 	return &UserStorage{db, l}
 }
 
-func (s *UserStorage) Add(ctx context.Context, login, pwdHash string) error {
-	queryText := `INSERT INTO "user"(login, password) VALUES ($1, $2);`
+func (s *UserStorage) Add(ctx context.Context, login, pwdHash string) (int64, error) {
+	// queryText := `INSERT INTO "user"(login, password) VALUES ($1, $2);`
+	queryText := `
+		INSERT INTO "user"(login, password)
+		VALUES ($1, $2)
+		RETURNING  "user".id;`
 
+	var uid int64
 	err := WithTx(ctx, s.db, func(ctx context.Context, tx *sqlx.Tx) error {
-		_, err := tx.ExecContext(ctx, queryText, login, pwdHash)
-		if err != nil {
+		if err := tx.GetContext(ctx, &uid, queryText, login, pwdHash); err != nil {
 			return err
 		}
+
+		// _, err := tx.ExecContext(ctx, queryText, login, pwdHash)
+		// if err != nil {
+		// 	return err
+		// }
 
 		// if _, err := result.RowsAffected(); err != nil {
 		// 	return err
@@ -42,10 +51,10 @@ func (s *UserStorage) Add(ctx context.Context, login, pwdHash string) error {
 	})
 
 	if err != nil {
-		return errors.Wrap(err, "userstorage.add")
+		return -1, errors.Wrap(err, "userstorage.add")
 	}
 
-	return nil
+	return uid, nil
 }
 
 func (s *UserStorage) Get(ctx context.Context, login string) (*DTOUser, error) {
