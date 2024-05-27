@@ -3,7 +3,7 @@ package customerrors
 import "errors"
 
 var (
-	ErrNotFoundOrders      = errors.New("not orders to sync")
+	ErrNotFoundOrders      = errors.New("нет заказов для обработки")
 	ErrClientIsNoAvailable = errors.New("client is no available")
 	ErrInvalidAccrualOrder = errors.New("invalid accrual order")                      // 500
 	ErrNoContent           = errors.New("заказ не зарегистрирован в системе расчёта") // 204

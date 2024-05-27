@@ -14,8 +14,8 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	accrualErr "github.com/a-x-a/go-loyalty/internal/accrual/customerrors"
-	accrualModel "github.com/a-x-a/go-loyalty/internal/accrual/model"
+	"github.com/a-x-a/go-loyalty/internal/service/accrualservice/customerrors"
+	"github.com/a-x-a/go-loyalty/internal/service/accrualservice/model"
 )
 
 type (
@@ -48,11 +48,11 @@ func New(address string, l *zap.Logger) *AccrualClient {
 	return &c
 }
 
-func (c *AccrualClient) Get(ctx context.Context, number string) (accrualModel.AccrualOrder, error) {
-	var order accrualModel.AccrualOrder
+func (c *AccrualClient) Get(ctx context.Context, number string) (model.AccrualOrder, error) {
+	var order model.AccrualOrder
 
 	if !c.isAvailable.Load() {
-		return order, accrualErr.ErrClientIsNoAvailable
+		return order, customerrors.ErrClientIsNoAvailable
 	}
 
 	url := fmt.Sprintf("%s/api/orders/%s", c.URL, number)
@@ -82,7 +82,7 @@ func (c *AccrualClient) Get(ctx context.Context, number string) (accrualModel.Ac
 
 		if !order.IsValid() {
 			c.l.Debug("invalid accrual order", zap.Any("order", order))
-			return order, accrualErr.ErrInvalidAccrualOrder
+			return order, customerrors.ErrInvalidAccrualOrder
 		}
 
 		c.l.Info("get response from accrual system", zap.Any("order", order))
@@ -92,13 +92,13 @@ func (c *AccrualClient) Get(ctx context.Context, number string) (accrualModel.Ac
 	case http.StatusNoContent:
 		c.l.Info("no content", zap.Int("code", http.StatusNoContent))
 
-		return order, accrualErr.ErrNoContent
+		return order, customerrors.ErrNoContent
 
 	case http.StatusTooManyRequests:
 		retryHeader := resp.Header.Get("Retry-After")
 		retryAfter, err := strconv.Atoi(retryHeader)
 		if err != nil {
-			return order, accrualErr.ErrTooManyRequests
+			return order, customerrors.ErrTooManyRequests
 		}
 
 		c.l.Info("too many requests", zap.Int("code", http.StatusNoContent), zap.Int("retry-after", retryAfter))
@@ -111,7 +111,7 @@ func (c *AccrualClient) Get(ctx context.Context, number string) (accrualModel.Ac
 			c.l.Debug("open client")
 		}(time.Duration(retryAfter) * time.Second)
 
-		return order, accrualErr.ErrTooManyRequests
+		return order, customerrors.ErrTooManyRequests
 	}
 
 	return order, nil

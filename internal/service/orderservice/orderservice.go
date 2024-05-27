@@ -7,10 +7,10 @@ import (
 
 	"github.com/pkg/errors"
 
-	accrualModel "github.com/a-x-a/go-loyalty/internal/accrual/model"
 	"github.com/a-x-a/go-loyalty/internal/config"
 	"github.com/a-x-a/go-loyalty/internal/customerrors"
 	"github.com/a-x-a/go-loyalty/internal/model"
+	accrualModel "github.com/a-x-a/go-loyalty/internal/service/accrualservice/model"
 	"github.com/a-x-a/go-loyalty/internal/storage"
 	"github.com/a-x-a/go-loyalty/pkg/luhn"
 )
@@ -97,7 +97,7 @@ func (s *OrderService) GetOrdersToProcessing(ctx context.Context) (*accrualModel
 
 func (s *OrderService) Update(ctx context.Context, number string, status int, accrual float64) error {
 	if err := s.CheckNumber(ctx, number); err != nil {
-		s.l.Debug("upload order error", zap.Error(errors.Wrap(err, "orderservice.update")))
+		s.l.Debug("update order error", zap.Error(errors.Wrap(err, "orderservice.update")))
 		return err
 	}
 

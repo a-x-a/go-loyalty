@@ -14,6 +14,7 @@ import (
 	"github.com/a-x-a/go-loyalty/internal/handler"
 	"github.com/a-x-a/go-loyalty/internal/logger"
 	"github.com/a-x-a/go-loyalty/internal/service"
+	"github.com/a-x-a/go-loyalty/internal/service/accrualservice"
 	"github.com/a-x-a/go-loyalty/internal/service/authservice"
 	"github.com/a-x-a/go-loyalty/internal/service/balanceservice"
 	"github.com/a-x-a/go-loyalty/internal/service/orderservice"
@@ -25,7 +26,7 @@ type Server struct {
 	e   *echo.Echo
 	h   *handler.Handler
 	l   *zap.Logger
-	s   *accrualsyncer.AccrualSyncer
+	aw  *accrualservice.AccrualWorker
 	cfg config.ServiceConfig
 }
 
@@ -58,8 +59,7 @@ func NewServer() *Server {
 	balanceStorage := storage.NewBalanceStorage(dbConn, log)
 	balanceService := balanceservice.New(balanceStorage, cfg, log)
 
-	accrualClient := accrualclient.New(cfg.AccrualSystemAddress, log)
-	accrualSyncer := accrualsyncer.New(orderService, balanceService, nil, accrualClient, cfg.AccrualFrequency, cfg.AccrualRateLimit, log)
+	accrualWorker := accrualservice.New(orderService, balanceService, nil, cfg.AccrualSystemAddress, cfg.AccrualFrequency, cfg.AccrualRateLimit, log)
 
 	s := service.New(userService, orderService, balanceService, log)
 	h := handler.New(s)
@@ -68,15 +68,15 @@ func NewServer() *Server {
 		e:   echo.New(),
 		h:   h,
 		l:   log,
-		s:   accrualSyncer,
+		aw:  accrualWorker,
 		cfg: cfg,
 	}
 }
 
 func (s *Server) Run(ctx context.Context) error {
 	go func() {
-		if err := s.s.Start(ctx); err != nil {
-			s.l.Panic("failed to start accrual sycronization", zap.Error(errors.Wrap(err, "syncer.start")))
+		if err := s.aw.Start(ctx); err != nil {
+			s.l.Panic("failed to start accrual worker", zap.Error(errors.Wrap(err, "acrualworker.start")))
 		}
 	}()
 
