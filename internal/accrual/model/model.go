@@ -45,7 +45,7 @@ func (o AccrualOrder) IsValid() bool {
 func (o AccrualOrder) GetStatusIndex() AccrualStatus {
 	for i, s := range statuses() {
 		if o.Status == s {
-			return AccrualStatus(i)
+			return AccrualStatus(i + 1)
 		}
 	}
 
