@@ -27,3 +27,6 @@ cmd/gophermart/gophermart
 # IDEs directories
 .idea
 .vscode 
+
+.env
+volume/

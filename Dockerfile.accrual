@@ -1,0 +1,12 @@
+FROM debian
+
+WORKDIR /app
+
+COPY /cmd/accrual/accrual_linux_amd64 .
+
+RUN chmod +x ./accrual_linux_amd64
+
+EXPOSE 8080
+
+CMD ["./accrual_linux_amd64"]
+

@@ -29,7 +29,7 @@ type (
 
 func NewServiceConfig() ServiceConfig {
 	cfg := ServiceConfig{
-		RunAddress:           "localhost:8080",
+		RunAddress:           "0.0.0.0:8080",
 		DatabaseURI:          "",
 		AccrualSystemAddress: "",
 		Secret:               "secret",
