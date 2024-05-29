@@ -7,7 +7,7 @@
       "askForPassword": true,
       "driver": "PostgreSQL",
       "name": "go-loyalty",
-      "database": "go-loyalty",
+      "database": "go_loyalty",
       "username": "postgres",
       "group": "db.home.lab"
     }

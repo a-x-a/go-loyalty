@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/pkg/errors"
+	echoSwagger "github.com/swaggo/echo-swagger" // echo-swagger middleware
 	"go.uber.org/zap"
 
 	"github.com/a-x-a/go-loyalty/internal/config"
@@ -80,22 +81,35 @@ func (s *Server) Run(ctx context.Context) error {
 		}
 	}()
 
-	s.e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
+	s.e.GET("/swagger/*", echoSwagger.WrapHandler)
+
+	zipRouter := s.e.Group("/api")
+	zipRouter.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Level: 5,
 	}))
-	s.e.POST("/api/user/register", s.h.RegisterUser())
-	s.e.POST("/api/user/login", s.h.Login())
+
+	// e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
+	// 	Skipper: func(c echo.Context) bool {
+	// 		if strings.Contains(c.Request().URL.Path, "swagger") {
+	// 			return true
+	// 		}
+	// 		return false
+	// 	},
+	// }))
+
+	zipRouter.POST("/user/register", s.h.RegisterUser())
+	zipRouter.POST("/user/login", s.h.Login())
 
 	config := util.NewJWTConfig(s.cfg.Secret)
-	r := s.e.Group("/api/user")
-	r.Use(echojwt.WithConfig(config))
+	securityRouter := zipRouter.Group("/user")
+	securityRouter.Use(echojwt.WithConfig(config))
 
-	r.POST("/orders", s.h.UploadOrder())
-	r.GET("/orders", s.h.GetAllOrders())
+	securityRouter.POST("/orders", s.h.UploadOrder())
+	securityRouter.GET("/orders", s.h.GetAllOrders())
 
-	r.GET("/balance", s.h.GetBalance())
-	r.POST("/balance/withdraw", s.h.WithdrawBalance())
-	r.GET("/withdrawals", s.h.WithdrawalsBalance())
+	securityRouter.GET("/balance", s.h.GetBalance())
+	securityRouter.POST("/balance/withdraw", s.h.WithdrawBalance())
+	securityRouter.GET("/withdrawals", s.h.WithdrawalsBalance())
 
 	s.l.Info("start http server", zap.String("address", s.cfg.RunAddress))
 

@@ -6,13 +6,13 @@ type (
 	OrderStatus int
 
 	Order struct {
-		Number     string    `json:"number"`
-		Status     string    `json:"status"`
-		Accrual    float64   `json:"accrual,omitempty"`
-		UploadedAt time.Time `json:"uploaded_at,omitempty"`
-	}
+		Number     string    `json:"number" example:"9278923470"`
+		Status     string    `json:"status" enums:"NEW,PROCESSING,INVALID,PROCESSED" example:"PROCESSED"`
+		Accrual    float64   `json:"accrual,omitempty" example:"500"`
+		UploadedAt time.Time `json:"uploaded_at,omitempty" example:"2020-12-10T15:15:45+03:00"`
+	} //	@Name Order
 
-	Orders []Order
+	Orders []Order //	@Name Orders
 )
 
 const (
