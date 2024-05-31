@@ -10,7 +10,18 @@ import (
 	"github.com/a-x-a/go-loyalty/internal/customerrors"
 )
 
-// Получение текущего баланса пользователя.
+// Balance godoc
+//
+//	@Summary	Получение баланса
+//	@Description	Получение текущего баланса пользователя
+//	@Tags	balance
+//	@ID	balance-get
+//	@Accept	json
+//	@Produce	json
+//	@Success	200	{object}	Balance	"Успешная обработка запроса"
+//	@Failure	401	"Пользователь не авторизован"
+//	@Security	ApiKeyAuth
+//	@Router	/user/balance [GET]
 func (h *Handler) GetBalance() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
 		uid, err := getUserID(c)
@@ -32,12 +43,26 @@ func (h *Handler) GetBalance() echo.HandlerFunc {
 	return fn
 }
 
-type withdrawRequwst struct {
-	Order string  `json:"order" validate:"required"`
-	Sum   float64 `json:"sum" validate:"required"`
-}
+type withdrawRequest struct {
+	Order string  `json:"order" example:"2377225624" validate:"required"`
+	Sum   float64 `json:"sum" example:"751" validate:"required"`
+} //	@Name	Withdraw
 
-// Запрос на списание средств.
+// Balance-withdraw godoc
+//
+//	@Summary	Запрос на списание средств
+//	@Description	Запрос на списание средств
+//	@Tags	balance
+//	@ID	balance-withdraw
+//	@Accept	json
+//	@Produce	json
+//	@Param	data	body	Withdraw	true	"`order` — номер заказа, `sum` — сумма баллов к списанию в счёт оплаты"
+//	@Success	200	"Успешная обработка запроса"
+//	@Failure	401	"Пользователь не авторизован"
+//	@Failure	402	"На счету недостаточно средств"
+//	@Failure	422	"Неверный номер заказа"
+//	@Security	ApiKeyAuth
+//	@Router	/user/balance/withdraw [POST]
 func (h *Handler) WithdrawBalance() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
 		uid, err := getUserID(c)
@@ -45,7 +70,7 @@ func (h *Handler) WithdrawBalance() echo.HandlerFunc {
 			return err
 		}
 
-		data := &withdrawRequwst{}
+		data := &withdrawRequest{}
 		if err := c.Bind(&data); err != nil {
 			return responseWithError(c, http.StatusInternalServerError, err)
 		}
@@ -71,7 +96,19 @@ func (h *Handler) WithdrawBalance() echo.HandlerFunc {
 	return fn
 }
 
-// Получение информации о выводе средств.
+// Withdrawals godoc
+//
+//	@Summary	Получение информации о выводе средств
+//	@Description	Получение информации о выводе средств
+//	@Tags	balance
+//	@ID	balance-withdrawals
+//	@Accept	json
+//	@Produce	json
+//	@Success	200	{object}	Withdrawals	"Успешная обработка запроса"
+//	@Failure	204	"Нет ни одного списания"
+//	@Failure	401	"Пользователь не авторизован"
+//	@Security	ApiKeyAuth
+//	@Router	/user/withdrawals [GET]
 func (h *Handler) WithdrawalsBalance() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
 		uid, err := getUserID(c)
@@ -79,10 +116,10 @@ func (h *Handler) WithdrawalsBalance() echo.HandlerFunc {
 			return err
 		}
 
-		data := &withdrawRequwst{}
-		if err := c.Bind(&data); err != nil {
-			return responseWithError(c, http.StatusInternalServerError, err)
-		}
+		// data := &withdrawRequwst{}
+		// if err := c.Bind(&data); err != nil {
+		// 	return responseWithError(c, http.StatusInternalServerError, err)
+		// }
 
 		ctx, cancel := context.WithCancel(c.Request().Context())
 		defer cancel()

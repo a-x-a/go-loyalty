@@ -11,7 +11,23 @@ import (
 	"github.com/a-x-a/go-loyalty/internal/customerrors"
 )
 
-// Загрузка номера заказа.
+// Order-upload godoc
+//
+//	@Summary	Загрузка номера заказа
+//	@Description	Загрузка номера заказа
+//	@Tags	orders
+//	@ID	orders-upload
+//	@Accept	plain
+//	@Produce	json
+//	@Param	number	body	string	true	"Номер заказа"
+//	@Success	200	"Номер заказа уже был загружен"
+//	@Success	202	"Новый номер заказа принят в обработку"
+//	@Failure	400	"Неверный формат запроса"
+//	@Failure	401	"Пользователь не авторизован"
+//	@Failure	409	"Номер заказа уже был загружен другим пользователем"
+//	@Failure	422	"Неверный номер заказа"
+//	@Security	ApiKeyAuth
+//	@Router	/user/orders [POST]
 func (h *Handler) UploadOrder() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
 		uid, err := getUserID(c)
@@ -52,7 +68,19 @@ func (h *Handler) UploadOrder() echo.HandlerFunc {
 	return fn
 }
 
-// Получение списка загруженных номеров заказов.
+// Orders-get godoc
+//
+//	@Summary	Получение списка заказов
+//	@Description	Получение списка загруженных номеров заказов
+//	@Tags	orders
+//	@ID	orders-get
+//	@Accept	json
+//	@Produce	json
+//	@Success	200	{object}	Orders	"Успешная обработка запроса"
+//	@Success	204	"Нет данных для ответа"
+//	@Failure	401	"Пользователь не авторизован"
+//	@Security	ApiKeyAuth
+//	@Router	/user/orders [GET]
 func (h *Handler) GetAllOrders() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
 		uid, err := getUserID(c)

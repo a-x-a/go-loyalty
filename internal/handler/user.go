@@ -11,15 +11,27 @@ import (
 	"github.com/a-x-a/go-loyalty/internal/customerrors"
 )
 
-type registerUser struct {
-	Login    string `json:"login" validate:"required"`
-	Password string `json:"password" validate:"required"`
-}
+type userAccount struct {
+	Login    string `json:"login" example:"<login>" validate:"required"`
+	Password string `json:"password" example:"<password>" validate:"required"`
+} //	@Name	Account
 
-// Регистрация пользователя.
+// Register godoc
+//
+//	@Summary	Регистрация пользователя
+//	@Description	Регистрация производится по паре логин/пароль
+//	@Tags	user
+//	@ID	user-register
+//	@Accept	json
+//	@Produce	json
+//	@Param	data	body	Account	true	"Логин и пароль пользователя"
+//	@Success	200	"Пользователь успешно зарегистрирован и аутентифицирован"
+//	@Failure	400	"Неверный формат запроса"
+//	@Failure	409	"Логин уже занят"
+//	@Router	/user/register [post]
 func (h *Handler) RegisterUser() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
-		data := &registerUser{}
+		data := &userAccount{}
 		if err := c.Bind(&data); err != nil {
 			return responseWithError(c, http.StatusBadRequest, err)
 		}
@@ -49,15 +61,22 @@ func (h *Handler) RegisterUser() echo.HandlerFunc {
 	return fn
 }
 
-type loginUser struct {
-	Login    string `json:"login" validate:"required"`
-	Password string `json:"password" validate:"required"`
-}
-
-// Аутентификация пользователя.
+// Login godoc
+//
+//	@Summary	Аутентификация пользователя
+//	@Description	Аутентификация производится по паре логин/пароль
+//	@Tags	user
+//	@ID	user-login
+//	@Accept	json
+//	@Produce	json
+//	@Param	data	body	Account	true	"Логин и пароль поьзователя"
+//	@Success	200	"Пользователь успешно аутентифицирован"
+//	@Failure	400	"Неверный формат запроса"
+//	@Failure	401	"Неверная пара логин/пароль"
+//	@Router	/user/login [post]
 func (h *Handler) Login() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
-		data := &loginUser{}
+		data := &userAccount{}
 		if err := c.Bind(&data); err != nil {
 			return responseWithError(c, http.StatusBadRequest, err)
 		}

@@ -7,8 +7,20 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/a-x-a/go-loyalty/docs"
 	"github.com/a-x-a/go-loyalty/internal/app"
 )
+
+//	@title	API «Гофермарт»
+//	@version	0.1
+//	@description	API сервер накопительной система лояльности «Гофермарт».
+
+//	@host	localhost:8080
+//	@BasePath	/api
+
+//	@securityDefinitions.apikey ApiKeyAuth
+//	@in header
+//	@name	Authorization
 
 func main() {
 	sigint := make(chan os.Signal, 1)
