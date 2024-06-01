@@ -1,7 +1,6 @@
 package luhn
 
 import (
-	"regexp"
 	"strconv"
 )
 
@@ -13,11 +12,6 @@ import (
 // Returns:
 // - bool: true if the string is a valid order number, false otherwise.
 func Check(s string) bool {
-	digitsRegExp := regexp.MustCompile(`^\d+$`)
-	if !digitsRegExp.MatchString(s) {
-		return false
-	}
-
 	s = revers(s)
 
 	sum := 0
