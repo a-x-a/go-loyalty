@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -102,4 +104,65 @@ func (h *Handler) Login() echo.HandlerFunc {
 	}
 
 	return fn
+}
+
+func (u *userAccount) UnmarshalJSON(b []byte) error {
+	var err error
+
+	d := json.NewDecoder(bytes.NewReader(b))
+
+	for token, _ := d.Token(); token != nil; token, _ = d.Token() {
+		if _, ok := token.(json.Delim); ok {
+			continue
+		}
+
+		key, ok := token.(string)
+		if !ok {
+			return customerrors.ErrInvalidRequestFormat
+		}
+
+		switch key {
+		case "login":
+			if u.Login != "" {
+				return customerrors.ErrInvalidRequestFormat
+			}
+
+			u.Login, err = getValue(d)
+			if err != nil {
+				return customerrors.ErrInvalidRequestFormat
+			}
+		case "password":
+			if u.Password != "" {
+				return customerrors.ErrInvalidRequestFormat
+			}
+
+			u.Password, err = getValue(d)
+			if err != nil {
+				return customerrors.ErrInvalidRequestFormat
+			}
+		default:
+			return customerrors.ErrInvalidRequestFormat
+		}
+	}
+
+	return nil
+}
+
+func getValue(d *json.Decoder) (string, error) {
+	var v string
+
+	if d.More() {
+		t, err := d.Token()
+		if err != nil {
+			return v, err
+		}
+
+		var ok bool
+		v, ok = t.(string)
+		if !ok {
+			return v, customerrors.ErrInvalidRequestFormat
+		}
+	}
+
+	return v, nil
 }

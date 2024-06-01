@@ -57,6 +57,8 @@ func (h *Handler) UploadOrder() echo.HandlerFunc {
 				return responseWithError(c, http.StatusConflict, err)
 			case errors.Is(err, customerrors.ErrInvalidOrderNumber):
 				return responseWithError(c, http.StatusUnprocessableEntity, err)
+			case errors.Is(err, customerrors.ErrInvalidRequestFormat):
+				return responseWithError(c, http.StatusBadRequest, err)
 			}
 
 			return responseWithError(c, http.StatusInternalServerError, err)

@@ -2,6 +2,7 @@ package orderservice
 
 import (
 	"context"
+	"regexp"
 
 	"go.uber.org/zap"
 
@@ -52,6 +53,10 @@ func (s *OrderService) GetAll(ctx context.Context, uid int64) (*model.Orders, er
 
 	s.l.Debug("get orders", zap.Any("orders", o))
 
+	if len(*o) == 0 {
+		return nil, customerrors.ErrNoContent
+	}
+
 	orders := model.Orders{}
 	for _, v := range *o {
 		order := model.Order{
@@ -67,6 +72,11 @@ func (s *OrderService) GetAll(ctx context.Context, uid int64) (*model.Orders, er
 }
 
 func (s *OrderService) CheckNumber(ctx context.Context, number string) error {
+	digitsRegExp := regexp.MustCompile(`^\d+$`)
+	if !digitsRegExp.MatchString(number) {
+		return customerrors.ErrInvalidRequestFormat
+	}
+
 	if luhn.Check(number) {
 		return nil
 	}
