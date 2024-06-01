@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/a-x-a/go-loyalty/internal/service/accrualservice/client"
+	"github.com/a-x-a/go-loyalty/internal/service/accrualservice/customerrors"
 	accrualErr "github.com/a-x-a/go-loyalty/internal/service/accrualservice/customerrors"
 	accrualModel "github.com/a-x-a/go-loyalty/internal/service/accrualservice/model"
 )
@@ -153,8 +154,11 @@ func (s *AccrualWorker) getAccrualOrdersResp(ctx context.Context, wg *sync.WaitG
 		for orderToProcessing := range ordersToProcessingChan {
 			order, err := s.client.Get(ctx, orderToProcessing.Order)
 			if err != nil {
-				s.l.Debug("fail to get order", zap.Error(errors.Wrap(err, "accrualworker.client.get")))
-				continue
+				if !errors.Is(err, customerrors.ErrNoContent) {
+					s.l.Debug("fail to get order", zap.Error(errors.Wrap(err, "accrualworker.client.get")))
+					continue
+				}
+				order.Status = accrualModel.PROCESSING.String()
 			}
 
 			order.UID = orderToProcessing.UID
