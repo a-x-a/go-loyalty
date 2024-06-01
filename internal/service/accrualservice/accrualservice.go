@@ -157,6 +157,8 @@ func (s *AccrualWorker) getAccrualOrdersResp(ctx context.Context, wg *sync.WaitG
 					s.l.Debug("fail to get order", zap.Error(errors.Wrap(err, "accrualworker.client.get")))
 					continue
 				}
+				order.Order = orderToProcessing.Order
+				order.Accrual = orderToProcessing.Accrual
 				order.Status = accrualModel.PROCESSING.String()
 			}
 
