@@ -1,11 +1,14 @@
 package handler
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 
 	"github.com/labstack/echo/v4"
 
+	"github.com/a-x-a/go-loyalty/internal/customerrors"
 	"github.com/a-x-a/go-loyalty/internal/model"
 )
 
@@ -52,4 +55,26 @@ func getUserID(c echo.Context) (int64, error) {
 	}
 
 	return uid, nil
+}
+
+func FillFromJSON(b []byte, i interface{}) error {
+	b = bytes.Replace(b, []byte(" "), []byte(""), -1)
+
+	err := json.Unmarshal(b, i)
+	if err != nil {
+		return err
+	}
+
+	srcLen := len(b)
+
+	b, err = json.Marshal(i)
+	if err != nil {
+		return err
+	}
+
+	if srcLen != len(b) {
+		return customerrors.ErrInvalidRequestFormat
+	}
+
+	return nil
 }

@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -31,8 +32,14 @@ type userAccount struct {
 //	@Router	/user/register [post]
 func (h *Handler) RegisterUser() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
+		body, err := io.ReadAll(c.Request().Body)
+		if err != nil {
+			return responseWithError(c, http.StatusBadRequest, err)
+		}
+
 		data := &userAccount{}
-		if err := c.Bind(&data); err != nil {
+		err = FillFromJSON(body, data)
+		if err != nil {
 			return responseWithError(c, http.StatusBadRequest, err)
 		}
 
@@ -76,8 +83,14 @@ func (h *Handler) RegisterUser() echo.HandlerFunc {
 //	@Router	/user/login [post]
 func (h *Handler) Login() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
+		body, err := io.ReadAll(c.Request().Body)
+		if err != nil {
+			return responseWithError(c, http.StatusBadRequest, err)
+		}
+
 		data := &userAccount{}
-		if err := c.Bind(&data); err != nil {
+		err = FillFromJSON(body, data)
+		if err != nil {
 			return responseWithError(c, http.StatusBadRequest, err)
 		}
 
