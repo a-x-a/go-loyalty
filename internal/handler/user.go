@@ -1,9 +1,10 @@
 package handler
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -32,14 +33,8 @@ type userAccount struct {
 //	@Router	/user/register [post]
 func (h *Handler) RegisterUser() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
-		body, err := io.ReadAll(c.Request().Body)
-		if err != nil {
-			return responseWithError(c, http.StatusBadRequest, err)
-		}
-
 		data := &userAccount{}
-		err = FillFromJSON(body, data)
-		if err != nil {
+		if err := c.Bind(&data); err != nil {
 			return responseWithError(c, http.StatusBadRequest, err)
 		}
 
@@ -83,14 +78,8 @@ func (h *Handler) RegisterUser() echo.HandlerFunc {
 //	@Router	/user/login [post]
 func (h *Handler) Login() echo.HandlerFunc {
 	var fn = func(c echo.Context) error {
-		body, err := io.ReadAll(c.Request().Body)
-		if err != nil {
-			return responseWithError(c, http.StatusBadRequest, err)
-		}
-
 		data := &userAccount{}
-		err = FillFromJSON(body, data)
-		if err != nil {
+		if err := c.Bind(&data); err != nil {
 			return responseWithError(c, http.StatusBadRequest, err)
 		}
 
@@ -115,4 +104,62 @@ func (h *Handler) Login() echo.HandlerFunc {
 	}
 
 	return fn
+}
+
+func (u *userAccount) UnmarshalJSON(b []byte) error {
+	d := json.NewDecoder(bytes.NewReader(b))
+
+	for token, _ := d.Token(); token != nil; token, _ = d.Token() {
+		if _, ok := token.(json.Delim); ok {
+			continue
+		}
+
+		key, ok := token.(string)
+		if !ok {
+			return customerrors.ErrInvalidRequestFormat
+		}
+
+		switch key {
+		case "login":
+			if d.More() {
+				t, err := d.Token()
+				if err != nil {
+					return err
+				}
+
+				value, ok := t.(string)
+				if !ok {
+					return customerrors.ErrInvalidRequestFormat
+				}
+
+				if u.Login != "" {
+					return customerrors.ErrInvalidRequestFormat
+				}
+
+				u.Login = value
+			}
+		case "password":
+			if d.More() {
+				t, err := d.Token()
+				if err != nil {
+					return err
+				}
+
+				value, ok := t.(string)
+				if !ok {
+					return customerrors.ErrInvalidRequestFormat
+				}
+
+				if u.Password != "" {
+					return customerrors.ErrInvalidRequestFormat
+				}
+
+				u.Password = value
+			}
+		default:
+			return customerrors.ErrInvalidRequestFormat
+		}
+	}
+
+	return nil
 }
