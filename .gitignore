@@ -15,7 +15,18 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
+vendor/
 
 # Go workspace file
 go.work
+
+# Binaries
+cmd/gophermart/main
+cmd/gophermart/gophermart
+
+# IDEs directories
+.idea
+.vscode 
+
+.env
+volume/

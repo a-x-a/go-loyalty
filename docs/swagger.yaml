@@ -1,0 +1,260 @@
+basePath: /api
+definitions:
+  Account:
+    properties:
+      login:
+        example: <login>
+        type: string
+      password:
+        example: <password>
+        type: string
+    required:
+    - login
+    - password
+    type: object
+  Balance:
+    properties:
+      current:
+        example: 500.5
+        type: number
+      withdrawn:
+        example: 42
+        type: number
+    type: object
+  Order:
+    properties:
+      accrual:
+        example: 500
+        type: number
+      number:
+        example: "9278923470"
+        type: string
+      status:
+        enum:
+        - NEW
+        - PROCESSING
+        - INVALID
+        - PROCESSED
+        example: PROCESSED
+        type: string
+      uploaded_at:
+        example: "2020-12-10T15:15:45+03:00"
+        type: string
+    type: object
+  Withdraw:
+    properties:
+      order:
+        example: "2377225624"
+        type: string
+      sum:
+        example: 751
+        type: number
+    required:
+    - order
+    - sum
+    type: object
+  Withdrawal:
+    properties:
+      order:
+        example: "2377225624"
+        type: string
+      processed_at:
+        example: "2020-12-09T16:09:57+03:00"
+        type: string
+      sum:
+        example: 500
+        type: number
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API сервер накопительной система лояльности «Гофермарт».
+  title: API «Гофермарт»
+  version: "0.1"
+paths:
+  /user/balance:
+    get:
+      consumes:
+      - application/json
+      description: Получение текущего баланса пользователя
+      operationId: balance-get
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешная обработка запроса
+          schema:
+            $ref: '#/definitions/Balance'
+        "401":
+          description: Пользователь не авторизован
+      security:
+      - ApiKeyAuth: []
+      summary: Получение баланса
+      tags:
+      - balance
+  /user/balance/withdraw:
+    post:
+      consumes:
+      - application/json
+      description: Запрос на списание средств
+      operationId: balance-withdraw
+      parameters:
+      - description: '`order` — номер заказа, `sum` — сумма баллов к списанию в счёт
+          оплаты'
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/Withdraw'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешная обработка запроса
+        "401":
+          description: Пользователь не авторизован
+        "402":
+          description: На счету недостаточно средств
+        "422":
+          description: Неверный номер заказа
+      security:
+      - ApiKeyAuth: []
+      summary: Запрос на списание средств
+      tags:
+      - balance
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      description: Аутентификация производится по паре логин/пароль
+      operationId: user-login
+      parameters:
+      - description: Логин и пароль поьзователя
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/Account'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Пользователь успешно аутентифицирован
+        "400":
+          description: Неверный формат запроса
+        "401":
+          description: Неверная пара логин/пароль
+      summary: Аутентификация пользователя
+      tags:
+      - user
+  /user/orders:
+    get:
+      consumes:
+      - application/json
+      description: Получение списка загруженных номеров заказов
+      operationId: orders-get
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешная обработка запроса
+          schema:
+            items:
+              $ref: '#/definitions/Order'
+            type: array
+        "204":
+          description: Нет данных для ответа
+        "401":
+          description: Пользователь не авторизован
+      security:
+      - ApiKeyAuth: []
+      summary: Получение списка заказов
+      tags:
+      - orders
+    post:
+      consumes:
+      - text/plain
+      description: Загрузка номера заказа
+      operationId: orders-upload
+      parameters:
+      - description: Номер заказа
+        in: body
+        name: number
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Номер заказа уже был загружен
+        "202":
+          description: Новый номер заказа принят в обработку
+        "400":
+          description: Неверный формат запроса
+        "401":
+          description: Пользователь не авторизован
+        "409":
+          description: Номер заказа уже был загружен другим пользователем
+        "422":
+          description: Неверный номер заказа
+      security:
+      - ApiKeyAuth: []
+      summary: Загрузка номера заказа
+      tags:
+      - orders
+  /user/register:
+    post:
+      consumes:
+      - application/json
+      description: Регистрация производится по паре логин/пароль
+      operationId: user-register
+      parameters:
+      - description: Логин и пароль пользователя
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/Account'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Пользователь успешно зарегистрирован и аутентифицирован
+        "400":
+          description: Неверный формат запроса
+        "409":
+          description: Логин уже занят
+      summary: Регистрация пользователя
+      tags:
+      - user
+  /user/withdrawals:
+    get:
+      consumes:
+      - application/json
+      description: Получение информации о выводе средств
+      operationId: balance-withdrawals
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешная обработка запроса
+          schema:
+            items:
+              $ref: '#/definitions/Withdrawal'
+            type: array
+        "204":
+          description: Нет ни одного списания
+        "401":
+          description: Пользователь не авторизован
+      security:
+      - ApiKeyAuth: []
+      summary: Получение информации о выводе средств
+      tags:
+      - balance
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
