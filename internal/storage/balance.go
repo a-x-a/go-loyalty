@@ -91,14 +91,14 @@ func (s *BalanceStorage) Withdraw(ctx context.Context, uid int64, number string,
 			(user_id, "order", sum)
 			VALUES($1, $2, $3)`
 
-		result, err := tx.ExecContext(ctx, queryText, uid, number, sum)
+		_, err := tx.ExecContext(ctx, queryText, uid, number, sum)
 		if err != nil {
 			return err
 		}
 
-		if _, err := result.RowsAffected(); err != nil {
-			return err
-		}
+		// if _, err := result.RowsAffected(); err != nil {
+		// 	return err
+		// }
 
 		// обновим баланс.
 		queryText = `INSERT INTO "balance"
@@ -109,14 +109,14 @@ func (s *BalanceStorage) Withdraw(ctx context.Context, uid int64, number string,
 			ON CONFLICT (user_id) DO UPDATE
 				SET current = balance.current - $2, withdrawn = balance.withdrawn + $2`
 
-		result, err = tx.ExecContext(ctx, queryText, uid, sum)
+		_, err = tx.ExecContext(ctx, queryText, uid, sum)
 		if err != nil {
 			return err
 		}
 
-		if _, err := result.RowsAffected(); err != nil {
-			return err
-		}
+		// if _, err := result.RowsAffected(); err != nil {
+		// 	return err
+		// }
 
 		// получим баланс.
 		queryText = `SELECT current, withdrawn
@@ -174,14 +174,14 @@ func (s *BalanceStorage) Accrual(ctx context.Context, uid int64, sum float64) er
 
 	err := WithTx(ctx, s.db, func(ctx context.Context, tx *sqlx.Tx) error {
 		// обновим баланс.
-		result, err := tx.ExecContext(ctx, queryText, uid, sum)
+		_, err := tx.ExecContext(ctx, queryText, uid, sum)
 		if err != nil {
 			return err
 		}
 
-		if _, err := result.RowsAffected(); err != nil {
-			return err
-		}
+		// if _, err := result.RowsAffected(); err != nil {
+		// 	return err
+		// }
 
 		return nil
 	})
